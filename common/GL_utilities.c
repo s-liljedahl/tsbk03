@@ -12,7 +12,6 @@
 // 131014: Added tesselation shader support
 // 150812: Added a NULL check on file names in readFile, makes Visual Studio happier.
 // 160302: Uses fopen_s on Windows, as suggested by Jesper Post. Should reduce warnings a bit.
-// 200405: Added a few typecasts that were missing.
 
 //#define GL3_PROTOTYPES
 #include <stdlib.h>
@@ -275,7 +274,7 @@ void CHECK_FRAMEBUFFER_STATUS()
 // FP buffer, suitable for HDR
 FBOstruct *initFBO(int width, int height, int int_method)
 {
-	FBOstruct *fbo = (FBOstruct *) malloc(sizeof(FBOstruct));
+	FBOstruct *fbo = malloc(sizeof(FBOstruct));
 
 	fbo->width = width;
 	fbo->height = height;
@@ -318,7 +317,7 @@ FBOstruct *initFBO(int width, int height, int int_method)
 // Integer buffer, not suitable for HDR!
 FBOstruct *initFBO2(int width, int height, int int_method, int create_depthimage)
 {
-    FBOstruct *fbo = (FBOstruct *)malloc(sizeof(FBOstruct));
+    FBOstruct *fbo = malloc(sizeof(FBOstruct));
 
     fbo->width = width;
     fbo->height = height;

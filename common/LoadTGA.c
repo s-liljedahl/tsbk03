@@ -6,12 +6,6 @@
 // 140520: Supports grayscale images (loads to red channel).
 // 141007: Added SaveTGA. (Moved from the obsolete LoadTGA2.)
 // 160302: Uses fopen_s on Windows, as suggested by Jesper Post. Should reduce warnings a bit.
-// 170220: Changed fopen_s to "rb". This made it fail for some textures.
-// 170331: Cleaned up a bit to remove warnings.
-// 170419: Fixed a bug that prevented monochrome images from loading.
-// 180216: calloc is better than malloc when you may have undefined data in parts of the texture!
-// 190416: Skipped testing the last four bytes of the 12-byte heading. That is the origin of the
-// image which is usually 0. It is now ignored.
 
 // NOTE: LoadTGA does NOT support all TGA variants! You may need to re-save your TGA
 // with different settings to find a suitable format.
@@ -49,7 +43,7 @@ bool LoadTGATextureData(char *filename, TextureData *texture)	// Loads A TGA Fil
 	GLubyte rle;
 	int b;
 	long row, rowLimit;
-	GLubyte pixelData[4];	
+	GLubyte pixelData[4];
 	
 	// Nytt fšr flipping-stšd 111114
 	char flipped;
@@ -58,7 +52,7 @@ bool LoadTGATextureData(char *filename, TextureData *texture)	// Loads A TGA Fil
 	// It seems Windows/VS doesn't like fopen any more, but fopen_s is not on the others.
 	FILE *file;
 	#if defined(_WIN32)
-		fopen_s(&file, filename, "rb");
+		fopen_s(&file, filename, "r");
 	#else
 		file = fopen(filename, "rb"); // rw works everywhere except Windows?
 	#endif
@@ -67,17 +61,17 @@ bool LoadTGATextureData(char *filename, TextureData *texture)	// Loads A TGA Fil
 	if (file == NULL) err = 1;				// Does File Even Exist?
 	else if (fread(actualHeader, 1, sizeof(actualHeader), file) != sizeof(actualHeader)) err = 2; // Are There 12 Bytes To Read?
 	else if (
-	// Edit 2019: Ignore the origin!
-				(memcmp(TGAuncompressedheader, actualHeader, sizeof(TGAuncompressedheader)-4) != 0) &&
-				(memcmp(TGAcompressedheader, actualHeader, sizeof(TGAcompressedheader)-4) != 0) &&
-				(memcmp(TGAuncompressedbwheader, actualHeader, sizeof(TGAuncompressedheader)-4) != 0) &&
-				(memcmp(TGAcompressedbwheader, actualHeader, sizeof(TGAcompressedheader)-4) != 0)
+				(memcmp(TGAuncompressedheader, actualHeader, sizeof(TGAuncompressedheader)) != 0) &&
+				(memcmp(TGAcompressedheader, actualHeader, sizeof(TGAcompressedheader)) != 0) &&
+				(memcmp(TGAuncompressedbwheader, actualHeader, sizeof(TGAuncompressedheader)) != 0) &&
+				(memcmp(TGAcompressedbwheader, actualHeader, sizeof(TGAcompressedheader)) != 0)
 			)
 			{
+//				printf("Unknown header: ");
+//				for (i = 0; i < 12; i++)
+//					printf("%d ", actualHeader[i]);
+//				printf("\n");
 				err = 3; // Does The Header Match What We Want?
-				for (i = 0; i < 12; i++)
-					printf("%d ", actualHeader[i]);
-				printf("\n");
 			}
 	else if (fread(header, 1, sizeof(header), file) != sizeof(header)) err = 4; // If So Read Next 6 Header Bytes
 	
@@ -123,7 +117,7 @@ bool LoadTGATextureData(char *filename, TextureData *texture)	// Loads A TGA Fil
 	imageSize = w * h * bytesPerPixel;	// Calculate The Memory Required For The TGA Data
 	rowSize	= texture->width * bytesPerPixel;	// Image memory per row
 	stepSize = w * bytesPerPixel;		// Memory per row
-	texture->imageData = (GLubyte *)calloc(1, imageSize);	// Reserve Memory To Hold The TGA Data
+	texture->imageData = (GLubyte *)malloc(imageSize);	// Reserve Memory To Hold The TGA Data
 	if (texture->imageData == NULL)				// Does The Storage Memory Exist?
 	{
 		fclose(file);
@@ -195,7 +189,6 @@ bool LoadTGATextureData(char *filename, TextureData *texture)	// Loads A TGA Fil
 		} while (i < imageSize);
 	}
 
-	if (bytesPerPixel >= 3) // if not monochrome	
 	for (i = 0; i < (int)(imageSize); i += bytesPerPixel)	// Loop Through The Image Data
 	{		// Swaps The 1st And 3rd Bytes ('R'ed and 'B'lue)
 		temp = texture->imageData[i];		// Temporarily Store The Value At Image Data 'i'
@@ -269,7 +262,7 @@ int SaveDataToTGA(char			*filename,
 			 unsigned char	pixelDepth,
 			 unsigned char	*imageData)
 {
-	unsigned char cGarbage = 0, mode,aux;
+	unsigned char cGarbage = 0,mode,aux;
 	int i, w, ix;
 	FILE *file;
 	char /*GLubyte*/ TGAuncompressedheader[12]={ 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};	// Uncompressed TGA Header
@@ -281,7 +274,7 @@ int SaveDataToTGA(char			*filename,
 
 // compute image type: 2 for RGB(A), 3 for greyscale
 	mode = pixelDepth / 8;
-// NOT YET IMPLEMENTED
+// The type is currently not used, but should.
 //	if ((pixelDepth == 24) || (pixelDepth == 32))
 //		type = 2;
 //	else
@@ -338,7 +331,7 @@ void SaveFramebufferToTGA(char *filename, GLint x, GLint y, GLint w, GLint h)
 	void *buffer = malloc(h*w*3);
 	glReadPixels(x, y, w, h, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 	err = SaveDataToTGA(filename, w, h, 
-			3*8, (unsigned char *)buffer);
+			3*8, buffer);
 //	free(buffer); already done
 	printf("SaveDataToTGA returned %d\n", err);
 }

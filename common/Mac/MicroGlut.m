@@ -53,12 +53,6 @@
 // Added GLUT_QUIT_FLAG for glutGet.
 // 150919: Added GLUT_MOUSE_POSITION_X and GLUT_MOUSE_POSITION_Y to glutGet.
 // 150923: Changed the keyboard special key constants to avoid all usable ASCII codes. This makes the "special key" calls unnecessary and keyboard handling simpler. We can stop using "special key" callbacks alltogether.
-// Some minor changes not documented.
-// 171019: Fixed a bug in context verison handling.
-// 180208: Added activateIgnoringOtherApps to bring it to front when launched.
-// #include <Carbon/Carbon.h> removed. Might be needed on older OSX!
-// 181206: Changed the GlutView to inherit from NSOpenGLView instead of NSView.
-// Experimental at this time!
 
 // Incompatibility in mouse coordinates; global or local?
 // Should be local! (I think they are now!)
@@ -147,7 +141,7 @@ void MakeContext(NSView *view)
 // Def this out about for disabling profile selection support,
 // if it is on we are defaulting to GL 1/2
 #ifndef GL3ONLY
-	if (gContextVersionMajor >= 3)
+	if (gContextVersionMajor == 3)
 #endif
 	// I ignore the minor version for now, 3.2 is all we can choose currently
 	{
@@ -354,8 +348,7 @@ static void doKeyboardEvent(NSEvent *theEvent, void (*func)(unsigned char key, i
 
 // -------------------- View ------------------------
 
-@interface GlutView : NSOpenGLView <NSWindowDelegate> { }
-// Changed NSView to NSOpenGLView, and it worked.
+@interface GlutView : NSView <NSWindowDelegate> { }
 -(void)drawRect:(NSRect)rect;
 -(void)keyDown:(NSEvent *)theEvent;
 -(void)keyUp:(NSEvent *)theEvent;
@@ -367,7 +360,6 @@ static void doKeyboardEvent(NSEvent *theEvent, void (*func)(unsigned char key, i
 -(void)rightMouseUp:(NSEvent *)theEvent;
 -(void)windowDidresize:(NSNotification *)note;
 -(BOOL)isFlipped;
-//-(void)setLayer:(CALayer*)layer; // Mojave???
 @end
 
 #define Pi 3.1415
@@ -621,13 +613,6 @@ char gLeftIsRight = 0;
 	return YES;
 }
 
-// This was supposed to help for NSView but it didn't.
-//-(void)setLayer:(CALayer*)layer;
-//{
-//	[super setLayer:layer];
-//	[m_context update];
-//}
-
 @end
 
 
@@ -683,13 +668,10 @@ void glutPostRedisplay()
 	updatePending = 1;
 }
 
-//void home()
-//{
-//	p = Bundle.main.path(forResource: "???", ofType: "???");
-//}
 
 // home()
 
+#include <Carbon/Carbon.h>
 #include <stdio.h>
 
 void home()
@@ -832,7 +814,6 @@ int glutCreateWindow (char *windowTitle)
 	MakeContext(view);
 
 // Moved from main loop
-	[NSApp activateIgnoringOtherApps:YES]; // Added 180208
 	[window setDelegate: (GlutView*)view];
 	[window makeKeyAndOrderFront: nil];
 	[window makeFirstResponder: view]; // Added 130214
@@ -1167,7 +1148,7 @@ void glutWarpPointer(int x, int y)
 	mp.x = 0; mp.y = 0;
 //	mp = [window convertBaseToScreen: mp];
 
-// Deprecation hell below:
+// Deprication hell below:
 //The NSWindow class provides these methods for converting between window local coordinates and screen global coordinates:
 //	¥	convertRectToScreen:
 //	¥	convertRectFromScreen:
@@ -1179,19 +1160,26 @@ void glutWarpPointer(int x, int y)
 	mpmp = [window convertRectToScreen: mpmp];
 	mp = mpmp.origin;
 
+//	printf("convertBaseToScreen %f %f\n", mp.x, mp.y);
+//	mp1 = [theView convertPoint: mp fromView: NULL];
+//	printf("fromView %f %f\n", mp1.x, mp1.y);
 // Flip to downwards Y
 	mp.y = NSScreen.mainScreen.frame.size.height - mp.y;
+//	printf("flipped Y: %f %f\n", mp.x, mp.y);
 
 // Get the view size
 	r = [[window contentView] frame];
+//	printf("frame %f %f %f %f\n", r.origin.x, r.origin.y, r.size.width, r.size.height);
 
 // Add the x, y offset, minus the view frame height to move to upper left.
 	pt.x = x + mp.x;
 	pt.y = y - r.size.height + mp.y;
 //	PostMouseEvent( 1, kCGEventMouseMoved, pt);
+//	printf("pt %f %f\n", pt.x, pt.y);
 	
 //	CGSetLocalEventsSuppressionInterval(0.0); -> glutInit
 
+//	CGPoint warpPoint = CGPointMake(mp.x + x, mp.y + 0);
 	CGWarpMouseCursorPosition(pt);
 	CGAssociateMouseAndMouseCursorPosition(true);
 }
