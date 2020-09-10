@@ -51,10 +51,11 @@ mat4 viewMatrix, modelToWorldMatrix;
 
 
 GLfloat square[] = {
-							-1,-1,0,
-							-1,1, 0,
-							1,1, 0,
-							1,-1, 0};
+	-1, -1, 0,
+	-1,  1, 0,
+	 1,  1, 0,
+	 1, -1, 0
+};
 GLfloat squareTexCoord[] = {
 							 0, 0,
 							 0, 1,
@@ -92,7 +93,7 @@ void init(void)
 	fbo2 = initFBO(W, H, 0);
 
 	// load the model
-//	model1 = LoadModelPlus("teapot.obj");
+	// model1 = LoadModelPlus("teapot.obj");
 	model1 = LoadModelPlus("stanford-bunny.obj");
 
 	squareModel = LoadDataToModel(
@@ -107,7 +108,7 @@ void init(void)
 
 	glutTimerFunc(5, &OnTimer, 0);
 
-//	zprInit(&viewMatrix, cam, point);
+	// zprInit(&viewMatrix, cam, point);
 }
 
 void OnTimer(int value)
@@ -122,8 +123,8 @@ void display(void)
 	mat4 vm2;
 	
 	// This function is called whenever it is time to render
-	//  a new frame; due to the idle()-function below, this
-	//  function will get called several times per second
+	// a new frame; due to the idle()-function below, this
+	// function will get called several times per second
 
 	// render to fbo1!
 	useFBO(fbo1, 0L, 0L);
@@ -155,7 +156,7 @@ void display(void)
 
 	// Done rendering the FBO! Set up for rendering on screen, using the result as texture!
 
-//	glFlush(); // Can cause flickering on some systems. Can also be necessary to make drawing complete.
+	// glFlush(); // Can cause flickering on some systems. Can also be necessary to make drawing complete.
 	useFBO(0L, fbo1, 0L);
 	glClearColor(0.0, 0.0, 0.0, 0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -170,13 +171,13 @@ void display(void)
 	glutSwapBuffers();
 }
 
+// window
 void reshape(GLsizei w, GLsizei h)
 {
 	glViewport(0, 0, w, h);
 	GLfloat ratio = (GLfloat) w / (GLfloat) h;
 	projectionMatrix = perspective(90, ratio, 1.0, 1000);
 }
-
 
 // This function is called whenever the computer is idle
 // As soon as the machine is idle, ask GLUT to trigger rendering of a new
