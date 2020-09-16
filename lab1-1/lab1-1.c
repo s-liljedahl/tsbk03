@@ -57,18 +57,25 @@ GLfloat square[] = {
 	 1, -1, 0
 };
 GLfloat squareTexCoord[] = {
-							 0, 0,
-							 0, 1,
-							 1, 1,
-							 1, 0};
+	0, 0,
+	0, 1,
+	1, 1,
+	1, 0
+};
 GLuint squareIndices[] = {0, 1, 2, 0, 2, 3};
 
 Model* squareModel;
 
 //----------------------Globals-------------------------------------------------
 Model *model1;
-FBOstruct *fbo1, *fbo2;
+FBOstruct *fbo1, *fbo2, *fbo3;
 GLuint phongshader = 0, plaintextureshader = 0;
+
+// filter shader
+GLuint filterShader = 0;
+GLuint truncateShader = 0;
+GLuint combineShader = 0;
+
 
 //-------------------------------------------------------------------------------------
 
@@ -86,11 +93,15 @@ void init(void)
 	// Load and compile shaders
 	plaintextureshader = loadShaders("plaintextureshader.vert", "plaintextureshader.frag");  // puts texture on teapot
 	phongshader = loadShaders("phong.vert", "phong.frag");  // renders with light (used for initial renderin of teapot)
+	filterShader = loadShaders("plaintextureshader.vert", "lpfilter.frag"); // low pass filter
+	truncateShader = loadShaders("plaintextureshader.vert", "truncate.frag"); // low pass filter
+	combineShader = loadShaders("plaintextureshader.vert", "combine.frag"); // low pass filter
 
 	printError("init shader");
 
 	fbo1 = initFBO(W, H, 0);
 	fbo2 = initFBO(W, H, 0);
+	fbo3 = initFBO(W, H, 0);
 
 	// load the model
 	// model1 = LoadModelPlus("teapot.obj");
@@ -115,6 +126,25 @@ void OnTimer(int value)
 {
 	glutPostRedisplay();
 	glutTimerFunc(5, &OnTimer, value);
+}
+
+void runfilter(GLuint shader, FBOstruct *in1, FBOstruct *in2, FBOstruct *out)
+{
+    glUseProgram(shader);
+    // Many of these things would be more efficiently done once and for all
+		
+		// Stäng av back-face culling. Den saknar funktion när du bara ritar en rektangel och är då bara en felkälla.
+    glDisable(GL_CULL_FACE);
+		// Stäng av Z-buffern! Betydande felkälla!
+    glDisable(GL_DEPTH_TEST);
+		
+		// texunit
+    glUniform1i(glGetUniformLocation(shader, "texUnit"), 0);
+    glUniform1i(glGetUniformLocation(shader, "texUnit2"), 1);
+		
+    useFBO(out, in1, in2);
+    DrawModel(squareModel, shader, "in_Position", NULL, "in_TexCoord");
+    glFlush();
 }
 
 //-------------------------------callback functions------------------------------------------
@@ -143,7 +173,7 @@ void display(void)
 
 	glUniformMatrix4fv(glGetUniformLocation(phongshader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniformMatrix4fv(glGetUniformLocation(phongshader, "modelviewMatrix"), 1, GL_TRUE, vm2.m);
-//	glUniform3fv(glGetUniformLocation(phongshader, "camPos"), 1, &cam.x);
+	// glUniform3fv(glGetUniformLocation(phongshader, "camPos"), 1, &cam.x);
 	glUniform1i(glGetUniformLocation(phongshader, "texUnit"), 0);
 
 	// Enable Z-buffering
@@ -154,6 +184,23 @@ void display(void)
 
 	DrawModel(model1, phongshader, "in_Position", "in_Normal", NULL);
 
+	// trukering
+	runfilter(truncateShader, fbo1, 0L, fbo2);
+	printError("trunacte");
+	
+	// filter 
+	for (size_t i = 0; i < 50; i++)
+	{
+		runfilter(filterShader, fbo2, 0L, fbo3);
+		runfilter(filterShader, fbo3, 0L, fbo2);
+	}
+	printError("filter");
+
+	// sammanslagning 
+	runfilter(combineShader, fbo2, fbo1, fbo3);
+	printError("combine");
+
+	runfilter(plaintextureshader, fbo3, 0L, fbo1);
 	// Done rendering the FBO! Set up for rendering on screen, using the result as texture!
 
 	// glFlush(); // Can cause flickering on some systems. Can also be necessary to make drawing complete.
@@ -170,6 +217,10 @@ void display(void)
 
 	glutSwapBuffers();
 }
+
+
+
+
 
 // window
 void reshape(GLsizei w, GLsizei h)
