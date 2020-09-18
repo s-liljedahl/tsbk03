@@ -15,23 +15,23 @@
 
 #ifdef __APPLE__
 // Mac
-	#include <OpenGL/gl3.h>
-	#include "MicroGlut.h"
-	// uses framework Cocoa
+#include <OpenGL/gl3.h>
+#include "MicroGlut.h"
+// uses framework Cocoa
 #else
-	#ifdef WIN32
+#ifdef WIN32
 // MS
-		#include <windows.h>
-		#include <stdio.h>
-		#include <GL/glew.h>
-		#include <GL/glut.h>
-	#else
+#include <windows.h>
+#include <stdio.h>
+#include <GL/glew.h>
+#include <GL/glut.h>
+#else
 // Linux
-		#include <stdio.h>
-		#include <GL/gl.h>
-		#include "MicroGlut.h"
+#include <stdio.h>
+#include <GL/gl.h>
+#include "MicroGlut.h"
 //		#include <GL/glut.h>
-	#endif
+#endif
 #endif
 
 #include "VectorUtils3.h"
@@ -49,22 +49,19 @@ void OnTimer(int value);
 mat4 projectionMatrix;
 mat4 viewMatrix, modelToWorldMatrix;
 
-
 GLfloat square[] = {
-	-1, -1, 0,
-	-1,  1, 0,
-	 1,  1, 0,
-	 1, -1, 0
-};
+		-1, -1, 0,
+		-1, 1, 0,
+		1, 1, 0,
+		1, -1, 0};
 GLfloat squareTexCoord[] = {
-	0, 0,
-	0, 1,
-	1, 1,
-	1, 0
-};
+		0, 0,
+		0, 1,
+		1, 1,
+		1, 0};
 GLuint squareIndices[] = {0, 1, 2, 0, 2, 3};
 
-Model* squareModel;
+Model *squareModel;
 
 //----------------------Globals-------------------------------------------------
 Model *model1;
@@ -76,12 +73,11 @@ GLuint filterShader = 0;
 GLuint truncateShader = 0;
 GLuint combineShader = 0;
 
-
 //-------------------------------------------------------------------------------------
 
 void init(void)
 {
-	dumpInfo();  // shader info
+	dumpInfo(); // shader info
 
 	// GL inits
 	glClearColor(0.1, 0.1, 0.3, 0);
@@ -91,11 +87,11 @@ void init(void)
 	printError("GL inits");
 
 	// Load and compile shaders
-	plaintextureshader = loadShaders("plaintextureshader.vert", "plaintextureshader.frag");  // puts texture on teapot
-	phongshader = loadShaders("phong.vert", "phong.frag");  // renders with light (used for initial renderin of teapot)
-	filterShader = loadShaders("plaintextureshader.vert", "lpfilter.frag"); // low pass filter
-	truncateShader = loadShaders("plaintextureshader.vert", "truncate.frag"); // low pass filter
-	combineShader = loadShaders("plaintextureshader.vert", "combine.frag"); // low pass filter
+	plaintextureshader = loadShaders("plaintextureshader.vert", "plaintextureshader.frag"); // puts texture on teapot
+	phongshader = loadShaders("phong.vert", "phong.frag");																	// renders with light (used for initial renderin of teapot)
+	filterShader = loadShaders("plaintextureshader.vert", "lpfilter.frag");									// low pass filter
+	truncateShader = loadShaders("plaintextureshader.vert", "truncate.frag");								// low pass filter
+	combineShader = loadShaders("plaintextureshader.vert", "combine.frag");									// low pass filter
 
 	printError("init shader");
 
@@ -130,28 +126,28 @@ void OnTimer(int value)
 
 void runfilter(GLuint shader, FBOstruct *in1, FBOstruct *in2, FBOstruct *out)
 {
-    glUseProgram(shader);
-    // Many of these things would be more efficiently done once and for all
-		
-		// Stäng av back-face culling. Den saknar funktion när du bara ritar en rektangel och är då bara en felkälla.
-    glDisable(GL_CULL_FACE);
-		// Stäng av Z-buffern! Betydande felkälla!
-    glDisable(GL_DEPTH_TEST);
-		
-		// texunit
-    glUniform1i(glGetUniformLocation(shader, "texUnit"), 0);
-    glUniform1i(glGetUniformLocation(shader, "texUnit2"), 1);
-		
-    useFBO(out, in1, in2);
-    DrawModel(squareModel, shader, "in_Position", NULL, "in_TexCoord");
-    glFlush();
+	glUseProgram(shader);
+	// Many of these things would be more efficiently done once and for all
+
+	// Stäng av back-face culling. Den saknar funktion när du bara ritar en rektangel och är då bara en felkälla.
+	glDisable(GL_CULL_FACE);
+	// Stäng av Z-buffern! Betydande felkälla!
+	glDisable(GL_DEPTH_TEST);
+
+	// texunit
+	glUniform1i(glGetUniformLocation(shader, "texUnit"), 0);
+	glUniform1i(glGetUniformLocation(shader, "texUnit2"), 1);
+
+	useFBO(out, in1, in2);
+	DrawModel(squareModel, shader, "in_Position", NULL, "in_TexCoord");
+	glFlush();
 }
 
 //-------------------------------callback functions------------------------------------------
 void display(void)
 {
 	mat4 vm2;
-	
+
 	// This function is called whenever it is time to render
 	// a new frame; due to the idle()-function below, this
 	// function will get called several times per second
@@ -169,7 +165,7 @@ void display(void)
 	vm2 = Mult(viewMatrix, modelToWorldMatrix);
 	// Scale and place bunny since it is too small
 	vm2 = Mult(vm2, T(0, -8.5, 0));
-	vm2 = Mult(vm2, S(80,80,80));
+	vm2 = Mult(vm2, S(80, 80, 80));
 
 	glUniformMatrix4fv(glGetUniformLocation(phongshader, "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniformMatrix4fv(glGetUniformLocation(phongshader, "modelviewMatrix"), 1, GL_TRUE, vm2.m);
@@ -187,8 +183,8 @@ void display(void)
 	// trukering
 	runfilter(truncateShader, fbo1, 0L, fbo2);
 	printError("trunacte");
-	
-	// filter 
+
+	// filter
 	for (size_t i = 0; i < 50; i++)
 	{
 		runfilter(filterShader, fbo2, 0L, fbo3);
@@ -196,7 +192,7 @@ void display(void)
 	}
 	printError("filter");
 
-	// sammanslagning 
+	// sammanslagning
 	runfilter(combineShader, fbo2, fbo1, fbo3);
 	printError("combine");
 
@@ -218,15 +214,11 @@ void display(void)
 	glutSwapBuffers();
 }
 
-
-
-
-
 // window
 void reshape(GLsizei w, GLsizei h)
 {
 	glViewport(0, 0, w, h);
-	GLfloat ratio = (GLfloat) w / (GLfloat) h;
+	GLfloat ratio = (GLfloat)w / (GLfloat)h;
 	projectionMatrix = perspective(90, ratio, 1.0, 1000);
 }
 
@@ -235,7 +227,7 @@ void reshape(GLsizei w, GLsizei h)
 // frame
 void idle()
 {
-  glutPostRedisplay();
+	glutPostRedisplay();
 }
 
 // Trackball
@@ -255,9 +247,9 @@ void mouseDragged(int x, int y)
 {
 	vec3 p;
 	mat4 m;
-	
+
 	// This is a simple and IMHO really nice trackball system:
-	
+
 	// Use the movement direction to create an orthogonal rotation axis
 
 	p.y = x - prevx;
@@ -267,15 +259,14 @@ void mouseDragged(int x, int y)
 	// Create a rotation around this axis and premultiply it on the model-to-world matrix
 	// Limited to fixed camera! Will be wrong if the camera is moved!
 
-	m = ArbRotate(p, sqrt(p.x*p.x + p.y*p.y) / 50.0); // Rotation in view coordinates	
+	m = ArbRotate(p, sqrt(p.x * p.x + p.y * p.y) / 50.0); // Rotation in view coordinates
 	modelToWorldMatrix = Mult(m, modelToWorldMatrix);
-	
+
 	prevx = x;
 	prevy = y;
-	
+
 	glutPostRedisplay();
 }
-
 
 //-----------------------------main-----------------------------------------------
 int main(int argc, char *argv[])
@@ -286,7 +277,7 @@ int main(int argc, char *argv[])
 	glutInitWindowSize(W, H);
 
 	glutInitContextVersion(3, 2);
-	glutCreateWindow ("Render to texture with FBO");
+	glutCreateWindow("Render to texture with FBO");
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutMouseFunc(mouseUpDown);
@@ -297,4 +288,3 @@ int main(int argc, char *argv[])
 	glutMainLoop();
 	exit(0);
 }
-

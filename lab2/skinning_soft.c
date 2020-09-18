@@ -65,7 +65,7 @@ vec3 g_normalsRes[kMaxRow][kMaxCorners];
 // vertex attributes sent to OpenGL
 vec3 g_boneWeights[kMaxRow][kMaxCorners];
 
-float weight[kMaxRow] = {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+float weight[kMaxRow] = {0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0};
 
 Model *cylinderModel; // Collects all the above for drawing with glDrawElements
 
@@ -173,7 +173,7 @@ Bone g_bones[2];
 void setupBones(void)
 {
 	g_bones[0].pos = SetVector(0.0f, 0.0f, 0.0f);
-	g_bones[1].pos = SetVector(4.5f, 0.0f, 0.0f);
+	g_bones[1].pos = SetVector(3.5f, 0.0f, 0.0f);
 	g_bones[0].rot = IdentityMatrix();
 	g_bones[1].rot = IdentityMatrix();
 }
@@ -186,6 +186,34 @@ void DeformCylinder()
 {
 	// vec3 v1, v2;
 	int row, corner;
+
+	// Animation oftast rotationer:
+	// Vilolägestransformation är vilolägets rotation och translation
+	// `Mben = Tvila * Rvila`
+	// På denna tillkommer sedan animationens rotation
+	// `M’ben = Mben * Ranim = Tvila * Rvila * Ranim`
+
+	mat4 T0 = T(g_bones[0].pos.x, g_bones[0].pos.y, g_bones[0].pos.z);
+	mat4 T1 = T(g_bones[1].pos.x, g_bones[1].pos.y, g_bones[1].pos.z);
+
+	// Vilolägestransformation är vilolägets rotation och translation
+	// M = T * R
+	mat4 M1 = MultMat4(T0, g_bones[0].rot);
+	mat4 M2 = MultMat4(T1, g_bones[1].rot);
+
+	// Modellkoordinater till benkoordinater:
+	// Mmb = M^-1ben
+	mat4 M1inv = InvertMat4(M1);
+	mat4 M2inv = InvertMat4(M2);
+
+	// Benkoordinater till modellkoordinater:
+	//M' = M * Ranim
+	mat4 Mbm1 = MultMat4(M1, g_bones[0].rot);
+	mat4 Mbm2 = MultMat4(M2, g_bones[1].rot);
+
+	// Mbm * Mmb
+	mat4 M1trans = MultMat4(Mbm1, M1inv);
+	mat4 M2trans = MultMat4(Mbm2, M2inv);
 
 	// f�r samtliga vertexar
 	for (row = 0; row < kMaxRow; row++)
@@ -205,25 +233,19 @@ void DeformCylinder()
 			//
 			// row traverserar i cylinderns längdriktning,
 			// corner traverserar "runt" cylindern
-			vec3 v_org = g_vertsOrg[row][corner];
-			vec3 v_bone = g_bones[1].pos;
 
-			mat4 Tben = T(v_bone.x, v_bone.y, v_bone.z);
-			// mat4 Mben = Mult(bone1.rot, Tben);
-			mat4 Mben_out = Mult(Tben, g_bones[1].rot);
-			mat4 Tben_inv = InvertMat4(Tben);
-			mat4 Mben = Mult(Mben_out, Tben_inv);
-
-			if (weight[row] > 0)
-			{
-				vec3 v_new = MultVec3(Mben, v_org);
-				g_vertsRes[row][corner] = v_new;
-			}
-			else
-			{
-				g_vertsRes[row][corner] = v_org;
-			}
 			// ---=========	Uppgift 2: Soft skinning i CPU ===========------
+
+			vec3 v_org = g_vertsOrg[row][corner];
+
+			vec3 w = g_boneWeights[row][corner];
+
+			vec3 wMv_1 = ScalarMult(MultVec3(M1trans, v_org), w.x);
+			vec3 wMv_2 = ScalarMult(MultVec3(M2trans, v_org), w.y);
+
+			vec3 v_new = VectorAdd(wMv_1, wMv_2);
+			g_vertsRes[row][corner] = v_new;
+
 			// Deformera cylindern enligt det skelett som finns
 			// i g_bones.
 			//
@@ -233,7 +255,7 @@ void DeformCylinder()
 			// g_boneWeights inneh�ller blendvikter f�r benen.
 			// g_vertsOrg inneh�ller ursprunglig vertexdata.
 			// g_vertsRes inneh�ller den vertexdata som skickas till OpenGL.
-		}
+		};
 	}
 }
 
