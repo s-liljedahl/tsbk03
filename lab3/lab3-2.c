@@ -167,17 +167,34 @@ void updateWorld()
             ball[i].P.x = abs(ball[i].P.x);
         if (ball[i].X.x > 0.82266270 - kBallSize)
             ball[i].P.x = -abs(ball[i].P.x);
+
         if (ball[i].X.z < -1.84146270 + kBallSize)
             ball[i].P.z = abs(ball[i].P.z);
         if (ball[i].X.z > 1.84146270 - kBallSize)
             ball[i].P.z = -abs(ball[i].P.z);
     }
 
+    GLfloat elasticity = 0;
+    vec3 v_rel_before;
+    mat4 I_inv;
+    vec3 normal;
+    vec3 r_A, r_B;
+
     // Detect collisions, calculate speed differences, apply forces
     for (i = 0; i < kNumBalls; i++)
         for (j = i + 1; j < kNumBalls; j++)
         {
-            // YOUR CODE HERE
+            vec3 diff = VectorSub(ball[i].X, ball[j].X);
+            GLfloat norm = Norm(diff);
+            vec3 n = Normalize(diff);
+
+            if (norm < 2 * kBallSize) {
+              printf("%f\n", norm);
+              printVec3(ball[i].X);
+              printVec3(ball[j].X);
+
+              
+            }
         }
 
     // Control rotation here to reflect
@@ -199,7 +216,6 @@ void updateWorld()
     {
         vec3 dX, dP, dL, dO;
         mat4 Rd;
-
 
         // YOUR CODE HERE
         // Note: omega is not set. How do you calculate it?
@@ -316,7 +332,7 @@ void init()
     free(textureStr);
 
     // Initialize ball data, positions etc
-    for (i = 0; i < kNumBalls; i++)
+    for (i = 2; i < 5; i++)
     {
         ball[i].mass = 1.0;
         ball[i].X = SetVector(0.0, 0.0, 0.0);
