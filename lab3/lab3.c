@@ -185,6 +185,13 @@ void updateWorld()
     for (i = 0; i < kNumBalls; i++)
     {
         // YOUR CODE HERE
+      	// mat4 ArbRotate(vec3 axis, GLfloat fi);
+        mat4 J = IdentityMatrix();
+        mat4 I = IdentityMatrix();
+
+        // rotation speed
+
+
     }
 
     // Update state, follows the book closely
@@ -193,23 +200,40 @@ void updateWorld()
         vec3 dX, dP, dL, dO;
         mat4 Rd;
 
-        // Note: omega is not set. How do you calculate it?
-        // YOUR CODE HERE
 
-        //		v := P * 1/mass
+        // YOUR CODE HERE
+        // Note: omega is not set. How do you calculate it?
+        vec3 v = ball[i].P;
+        // speed X up
+        vec3 rot_axis = CrossProduct(SetVector(0, 1, 0), v);
+        GLfloat speed = Norm(v);
+        mat4 rot = ArbRotate(rot_axis, speed);
+        // add rotation
+        ball[i].R = Mult(ball[i].R, rot);
+
+        // Speed
+        // v := P * 1/mass
         ball[i].v = ScalarMult(ball[i].P, 1.0 / (ball[i].mass));
-        //		X := X + v*dT
+
+        // Position
+        // X := X + v*dT
         dX = ScalarMult(ball[i].v, deltaT);     // dX := v*dT
         ball[i].X = VectorAdd(ball[i].X, dX);   // X := X + dX
-                                                //		R := R + Rd*dT
+
+        // Rotation
+        // R := R + Rd*dT
         dO = ScalarMult(ball[i].omega, deltaT); // dO := omega*dT
         Rd = CrossMatrix(dO);                   // Calc dO, add to R
         Rd = Mult(Rd, ball[i].R);               // Rotate the diff (NOTE: This was missing in early versions.)
         ball[i].R = MatrixAdd(ball[i].R, Rd);
-        //		P := P + F * dT
+
+        // Linear momentum
+        // P := P + F * dT
         dP = ScalarMult(ball[i].F, deltaT);   // dP := F*dT
         ball[i].P = VectorAdd(ball[i].P, dP); // P := P + dP
-                                              //		L := L + t * dT
+
+        // Angular momentum
+        // L := L + t * dT
         dL = ScalarMult(ball[i].T, deltaT);   // dL := T*dT
         ball[i].L = VectorAdd(ball[i].L, dL); // L := L + dL
 
