@@ -120,7 +120,7 @@ void initBoneWeights(void)
 			{
 				g_boneWeights[row][corner][bone] = boneWeights[bone] / totalBoneWeight;
 
-				printf("%d %d %d\n", bone, bone & 1, (bone + 1) & 1);
+				// printf("%d %d %d\n", bone, bone & 1, (bone + 1) & 1);
 				if (bone & 1)
 					g_boneWeightVis[row][corner].s += g_boneWeights[row][corner][bone]; // Copy data to here to visualize your weights or anything else
 				if ((bone + 1) & 1)
@@ -138,7 +138,7 @@ void initBoneWeights(void)
 		//		for (corner = 0; corner < kMaxCorners; corner++)
 		for (bone = 0; bone < kMaxBones; bone++)
 		{
-			printf("%d %d %f\n", row, bone, g_boneWeights[row][corner][bone]);
+			// printf("%d %d %f\n", row, bone, g_boneWeights[row][corner][bone]);
 		}
 }
 
@@ -268,6 +268,7 @@ void DeformCylinder()
 	mat4 M_bones[kMaxBones];
 	mat4 M_bm;
 	mat4 M_mb;
+	mat4 M_bone;
 
 	mat4 Mbm[kMaxBones];
 	mat4 Mmb[kMaxBones];
@@ -276,29 +277,37 @@ void DeformCylinder()
 	{
 		M_bm = IdentityMatrix();
 		M_mb = IdentityMatrix();
+		vec3 bone_rel_pos;
 
 		// parent bones
 		for (int i = 0; i < bone; i++)
 		{
-			mat4 T_bone_rest_rel = T(0.0, 0.0, 0.0);
-			mat4 T_bone_rel = T(g_bones[i].pos.x, g_bones[i].pos.y, g_bones[i].pos.z);
-			mat4 R_bone_anim = g_bones[i].rot;
-			mat4 R_bone_rest = g_bonesRes[i].rot;
+			if (i == 0) {
+				bone_rel_pos = g_bones[i].pos;
+			} else {
+				bone_rel_pos = VectorSub(g_bones[i].pos, g_bones[i-1].pos);
+			}
 
-			// printMat4(T_bone_rel);
+			mat4 T_bone_rest_rel = T(bone_rel_pos.x, bone_rel_pos.y, bone_rel_pos.z);
+			mat4 T_bone_rest = T(g_bones[i].pos.x, g_bones[i].pos.y, g_bones[i].pos.z);
 
-			// Mbm = M * Trest * Ranim
-			M_bm = Mult(M_bm, Mult(T_bone_rest_rel, R_bone_anim));
+			mat4 R_bone_rest = g_bones[i].rot;
+			mat4 R_bone_anim = g_bonesRes[i].rot;
 
-			// Mmb = M * Trest * Ranim * Rrest
-			M_mb = Mult(M_mb, Mult(T_bone_rest_rel, Mult(R_bone_anim, R_bone_rest)));
+			// M = Trest * Rrest
+			M_bone = (Mult(T_bone_rest_rel, R_bone_rest));
+
+			// M_mb_i = Mbone_inv
+			M_mb = Mult(M_mb, InvertMat4(M_bone));
+
+			// M_bm_i = Mbone * Ranim
+			M_bm = Mult(M_bm, Mult(M_bone, R_bone_anim));
+
 		}
 
-		mat4 M_bm_inv = InvertMat4(M_bm);
-
-		Mbm[bone] = M_bm_inv;
+		Mbm[bone] = M_bm;
 		Mmb[bone] = M_mb;
-		M_bones[bone] = Mult(M_mb, M_bm_inv);
+		M_bones[bone] = Mult(M_bm, M_mb);
 	}
 
 	int row, corner;
@@ -323,7 +332,6 @@ void DeformCylinder()
 			//loop over all bones
 			for (int bone = 0; bone < kMaxBones; bone++)
 			{
-
 				vec3 baseVert = (g_vertsOrg[row][corner]);
 				mat4 Mtot = Mult(Mbm[bone], Mmb[bone]);
 				vec3 transformedPoint = MultVec3(Mtot, baseVert);
