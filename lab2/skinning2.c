@@ -285,11 +285,13 @@ void DeformCylinder()
 			mat4 R_bone_anim = g_bones[i].rot;
 			mat4 R_bone_rest = g_bonesRes[i].rot;
 
+			// printMat4(T_bone_rel);
+
 			// Mbm = M * Trest * Ranim
 			M_bm = Mult(M_bm, Mult(T_bone_rest_rel, R_bone_anim));
 
 			// Mmb = M * Trest * Ranim * Rrest
-			M_mb = Mult(M_mb, Mult(T_bone_rest_rel, Mult(g_bones[i].rot, g_bonesRes[i].rot)));
+			M_mb = Mult(M_mb, Mult(T_bone_rest_rel, Mult(R_bone_anim, R_bone_rest)));
 		}
 
 		mat4 M_bm_inv = InvertMat4(M_bm);
@@ -298,57 +300,6 @@ void DeformCylinder()
 		Mmb[bone] = M_mb;
 		M_bones[bone] = Mult(M_mb, M_bm_inv);
 	}
-
-	// resting position for each leg
-	// Mbone2 = Tbone2 * Rbone2
-
-	// know in model coordinates ->
-	// Vbone2 = M-1bone2 * M-1bone1 * Vm
-	// know in bone rel coordinates ->
-	// Vm = Mbone1 * Mbone2 * Vbone2
-
-	// Transformed V
-	// V_transformed = M'bone1 * M'bone2 * M-1bone2 * M-1bone1 * Vm
-
-	// 	vec3 V_rest = g_bones[bone].pos;
-	// 	for (int i = 0; i < bone; i++)
-	// 	{
-	// 		vec3 bonePos = g_bones[i].pos;
-	// 		V_rest = VectorSub(V_rest, bonePos);
-	// 	}
-
-	// 	// M'bone = tRest * rRest * rAnim
-	// 	mat4 R_rest, R_anim, T_rest, M_bone;
-
-	// 	// V_rest = g_bonesRes[bone].pos;
-	// 	T_rest = T(V_rest.x, V_rest.y, V_rest.z);
-	// 	R_rest = g_bones[bone].rot;
-	// 	R_anim = g_bonesRes[bone].rot;
-	// 	//animated
-	// 	M_bone = Mult(T_rest, Mult(R_rest, R_anim)); //new transformation
-
-	// 	//Find the base rotation and translation
-	// 	vec3 T_base = g_bones[bone].pos;
-	// 	mat4 T_base_inv = T(-T_base.x, -T_base.y, -T_base.z);
-	// 	mat4 R_base = g_bones[bone].rot;
-	// 	mat4 R_base_inv = Transpose(R_base);
-
-	// 	//Mbase = Rbase^(-1) * Tbase^(-1)
-	// 	mat4 M_mb = Mult(R_base_inv, T_base_inv);
-	// 	mat4 M_bm = Mult(M_bone, R_anim);
-
-	// 	//set Model->Bone transformation and Bone->model transformation
-	// 	Mmb[bone] = M_mb; //model->bones coordinates
-	// 	Mbm[bone] = M_bm; //bones->model
-
-	// 	//check previous bones and set model coordinate:
-	// 	for (int i = bone; i < kMaxBones; i++)
-	// 	{
-	// 		Mbm[i] = Mult(Mbm[bone], Mbm[i]);
-	// 	}
-
-	// 	MTot[bone] = Mult(Mbm[bone], Mmb[bone]);
-	// }
 
 	int row, corner;
 	// f�r samtliga vertexar
@@ -374,10 +325,8 @@ void DeformCylinder()
 			{
 
 				vec3 baseVert = (g_vertsOrg[row][corner]);
-
-				mat4 transformation = Mult(Mbm[bone], Mmb[bone]);
-				// vec3 transformedPoint = MultVec3(M_bones[bone], baseVert);
-				vec3 transformedPoint = MultVec3(transformation, baseVert);
+				mat4 Mtot = Mult(Mbm[bone], Mmb[bone]);
+				vec3 transformedPoint = MultVec3(Mtot, baseVert);
 				vec3 contribution = ScalarMult(transformedPoint, g_boneWeights[row][corner][bone]);
 				g_vertsRes[row][corner] = VectorAdd(g_vertsRes[row][corner], contribution);
 			}
