@@ -3,29 +3,24 @@
 // 2012: Ported to OpenGL 3.2 by Justina Mickonyt� and Ingemar R.
 // 2013: Adapted to VectorUtils3 and MicroGlut.
 
-// gcc lab3.c ../common/*.c -lGL -o lab3 -I../common
+// Variant without zpr
 
-// Includes vary a bit with platforms.
-// MS Windows needs GLEW or glee.
-// For Mac, I used MicroGlut and Lightweight IDE.
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #ifdef __APPLE__
 #include <OpenGL/gl3.h>
-#include "MicroGlut.h"
 // uses framework Cocoa
 #else
-#include "MicroGlut.h" // #include <GL/glut.h>
 #include <GL/gl.h>
 #endif
 
+#include "MicroGlut.h"
 #include <sys/time.h>
 #include "GL_utilities.h"
 #include "VectorUtils3.h"
 #include "loadobj.h"
 #include "LoadTGA.h"
-#include "zpr.h"
 
 // initial width and heights
 #define W 600
@@ -150,6 +145,8 @@ void loadMaterial(Material mt)
 }
 
 //---------------------------------- physics update and billiard table rendering ----------------------------------
+GLfloat elasticity = 0.8;
+
 void updateWorld()
 {
     // Zero forces
@@ -174,26 +171,25 @@ void updateWorld()
             ball[i].P.z = -abs(ball[i].P.z);
     }
 
-    GLfloat elasticity = 0;
-    vec3 v_rel_before;
-    mat4 I_inv;
-    vec3 normal;
-    vec3 r_A, r_B;
-
     // Detect collisions, calculate speed differences, apply forces
+    vec3 diff, n, v_diff;
+    GLfloat v_rel_before, imp;
+
     for (i = 0; i < kNumBalls; i++)
         for (j = i + 1; j < kNumBalls; j++)
         {
-            vec3 diff = VectorSub(ball[i].X, ball[j].X);
-            GLfloat norm = Norm(diff);
-            vec3 n = Normalize(diff);
+            diff = VectorSub(ball[i].X, ball[j].X);
+            v_diff = VectorSub(ball[i].v, ball[j].v);
+            n = Normalize(diff);
 
-            if (norm < 2 * kBallSize) {
-              printf("%f\n", norm);
-              printVec3(ball[i].X);
-              printVec3(ball[j].X);
-
-              
+            // Check whether the balls are moving towards or away from one another
+            // perform the collision only if they are moving towards one another.
+            if (Norm(diff) <= (2 * kBallSize) && DotProduct(v_diff, diff) < 0)
+            {
+                v_rel_before = DotProduct(n, v_diff);
+                imp = (-(elasticity + 1) * v_rel_before) / (2.0 / ball[i].mass);
+                ball[i].P = VectorAdd(ScalarMult(n, imp), ball[i].P);
+                ball[j].P = VectorAdd(ScalarMult(n, -imp), ball[j].P);
             }
         }
 
@@ -202,13 +198,8 @@ void updateWorld()
     for (i = 0; i < kNumBalls; i++)
     {
         // YOUR CODE HERE
-      	// mat4 ArbRotate(vec3 axis, GLfloat fi);
-        mat4 J = IdentityMatrix();
-        mat4 I = IdentityMatrix();
-
+        // mat4 ArbRotate(vec3 axis, GLfloat fi);
         // rotation speed
-
-
     }
 
     // Update state, follows the book closely
@@ -233,8 +224,8 @@ void updateWorld()
 
         // Position
         // X := X + v*dT
-        dX = ScalarMult(ball[i].v, deltaT);     // dX := v*dT
-        ball[i].X = VectorAdd(ball[i].X, dX);   // X := X + dX
+        dX = ScalarMult(ball[i].v, deltaT);   // dX := v*dT
+        ball[i].X = VectorAdd(ball[i].X, dX); // X := X + dX
 
         // Rotation
         // R := R + Rd*dT
@@ -332,13 +323,14 @@ void init()
     free(textureStr);
 
     // Initialize ball data, positions etc
-    for (i = 2; i < 5; i++)
+    for (i = 1; i < kNumBalls; i++)
     {
         ball[i].mass = 1.0;
         ball[i].X = SetVector(0.0, 0.0, 0.0);
         ball[i].P = SetVector(((float)(i % 13)) / 50.0, 0.0, ((float)(i % 15)) / 50.0);
         ball[i].R = IdentityMatrix();
     }
+
     ball[0].X = SetVector(0, 0, 0);
     ball[1].X = SetVector(0, 0, 0.5);
     ball[2].X = SetVector(0.0, 0, 1.0);
@@ -348,12 +340,10 @@ void init()
     ball[2].P = SetVector(0, 0, 0);
     ball[3].P = SetVector(0, 0, 1.00);
 
-    cam = SetVector(0, 2, 2);
-    point = SetVector(0, 0, 0);
-    vec3 up = {0, 1, 0};
-    viewMatrix = lookAtv(cam, point, up);
-
-    zprInit(&viewMatrix, cam, point); // camera controls
+    cam = SetVector(0, 1.2, 2.5);
+    point = SetVector(0, 0, 1.0);
+    viewMatrix = lookAtv(cam, point, SetVector(0, 1, 0));
+    // zprInit(&viewMatrix, cam, point);  // camera controls
 
     resetElapsedTime();
 }
