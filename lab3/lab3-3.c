@@ -70,7 +70,8 @@ typedef struct
 
     vec3 F, T; // accumulated force and torque
 
-    //  mat4 J, Ji; We could have these but we can live without them for spheres.
+    mat4 J, Ji; // We could have these but we can live without them for spheres.
+
     vec3 omega; // Angular momentum
     vec3 v;     // Change in velocity
 
@@ -87,19 +88,11 @@ Material ballMt = {{1.0, 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0, 0.0}, 0.1, 0.6, 1.0, 50
          tableMt = {{0.2, 0.1, 0.0, 1.0}, {0.4, 0.2, 0.1, 0.0}, 0.1, 0.6, 1.0, 5.0},
          tableSurfaceMt = {{0.1, 0.5, 0.1, 1.0}, {0.0, 0.0, 0.0, 0.0}, 0.1, 0.6, 1.0, 0.0};
 
-// case 1
-// enum
-// {
-//     kNumBalls = 4,
-// }; // Change as desired, max 16
-// GLfloat elasticity = 1;
-
-// case 3
 enum
 {
     kNumBalls = 16,
 }; // Change as desired, max 16
-GLfloat elasticity = 0;
+GLfloat elasticity = 0.5;
 
 //------------------------------Globals---------------------------------
 ModelTexturePair tableAndLegs, tableSurf;
@@ -203,11 +196,23 @@ void updateWorld()
 
     // Control rotation here to reflect
     // friction against floor, simplified as well as more correct
+    vec3 down = SetVector(0, -kBallSize, 0);
+    GLfloat friction_const = -1;
+
     for (i = 0; i < kNumBalls; i++)
     {
         // YOUR CODE HERE
-        // mat4 ArbRotate(vec3 axis, GLfloat fi);
-        // rotation speed
+
+        // tangent velocity v_t = w x r
+        vec3 v_T = CrossProduct(ball[i].omega, down);
+        // relative velocity
+        vec3 friction = ScalarMult(VectorAdd(ball[i].v, v_T), friction_const);
+        // add torque T = r x f
+        ball[i].T = VectorAdd(ball[i].T, CrossProduct(down, friction));
+        // add friction force
+        ball[i].F = VectorAdd(ball[i].F, friction);
+        // rotation speed Ji * L
+        ball[i].omega = MultVec3(ball[i].Ji, ball[i].L);
     }
 
     // Update state, follows the book closely
@@ -218,13 +223,13 @@ void updateWorld()
 
         // YOUR CODE HERE
         // Note: omega is not set. How do you calculate it?
-        vec3 v = ball[i].P;
+        // vec3 v = ball[i].P;
         // speed X up
-        vec3 rot_axis = CrossProduct(SetVector(0, 1, 0), v);
-        GLfloat speed = Norm(v);
-        mat4 rot = ArbRotate(rot_axis, speed);
+        // vec3 rot_axis = CrossProduct(SetVector(0, 1, 0), v);
+        // GLfloat speed = Norm(v);
+        // mat4 rot = ArbRotate(rot_axis, speed * 0.5);
         // add rotation
-        ball[i].R = Mult(ball[i].R, rot);
+        // ball[i].R = Mult(ball[i].R, rot);
 
         // Speed
         // v := P * 1/mass
@@ -239,7 +244,7 @@ void updateWorld()
         // R := R + Rd*dT
         dO = ScalarMult(ball[i].omega, deltaT); // dO := omega*dT
         Rd = CrossMatrix(dO);                   // Calc dO, add to R
-        Rd = Mult(Rd, ball[i].R);               // Rotate the diff (NOTE: This was missing in early versions.)
+        Rd = Mult(Rd, ball[i].R);               // Rotate the diff
         ball[i].R = MatrixAdd(ball[i].R, Rd);
 
         // Linear momentum
@@ -249,8 +254,12 @@ void updateWorld()
 
         // Angular momentum
         // L := L + t * dT
-        dL = ScalarMult(ball[i].T, deltaT);   // dL := T*dT
-        ball[i].L = VectorAdd(ball[i].L, dL); // L := L + dL
+
+        // dL := T*dT
+        dL = ScalarMult(ball[i].T, deltaT);
+        // L := L + dL
+        // L = I * w
+        ball[i].L = VectorAdd(ball[i].L, dL);
 
         OrthoNormalizeMatrix(&ball[i].R);
     }
@@ -334,6 +343,13 @@ void init()
     for (i = 0; i < kNumBalls; i++)
     {
         ball[i].mass = 1.0;
+
+        // I = m * r^2
+        GLfloat I = ball[i].mass * pow(kBallSize, 2) / 3;
+
+        ball[i].J = S(I, I, I);
+        ball[i].Ji = InvertMat4(ball[i].J);
+
         ball[i].X = SetVector(0.0, 0.0, 0.0);
         ball[i].P = SetVector(((float)(i % 13)) / 50.0, 0.0, ((float)(i % 15)) / 50.0);
         ball[i].R = IdentityMatrix();
@@ -353,11 +369,6 @@ void init()
     viewMatrix = lookAtv(cam, point, SetVector(0, 1, 0));
     // zprInit(&viewMatrix, cam, point);  // camera controls
 
-    // case 2
-    ball[3].mass = 5;
-    ball[4].mass = 5;
-    ball[5].mass = 10;
-
     resetElapsedTime();
 }
 
@@ -374,7 +385,7 @@ void display(void)
     glClearColor(0.1, 0.1, 0.3, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //    int time = glutGet(GLUT_ELAPSED_TIME);
+    // int time = glutGet(GLUT_ELAPSED_TIME);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
