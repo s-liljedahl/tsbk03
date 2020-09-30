@@ -4,12 +4,12 @@
 // OpenGL 3 conversion 2013.
 
 #ifdef __APPLE__
-	#include <OpenGL/gl3.h>
-	#include "MicroGlut.h"
-	// uses framework Cocoa
+#include <OpenGL/gl3.h>
+#include "MicroGlut.h"
+// uses framework Cocoa
 #else
-	#include <GL/gl.h>
-	#include "MicroGlut.h"
+#include <GL/gl.h>
+#include "MicroGlut.h"
 #endif
 
 #include <stdlib.h>
@@ -17,33 +17,32 @@
 #include "SpriteLight.h"
 #include "GL_utilities.h"
 
-// LŠgg till egna globaler hŠr efter behov.
-
+// Lï¿½gg till egna globaler hï¿½r efter behov.
 
 void SpriteBehavior() // Din kod!
 {
-// LŠgg till din labbkod hŠr. Det gŒr bra att Šndra var som helst i
-// koden i švrigt, men mycket kan samlas hŠr. Du kan utgŒ frŒn den
-// globala listroten, gSpriteRoot, fšr att kontrollera alla sprites
-// hastigheter och positioner, eller arbeta frŒn egna globaler.
+	// Lï¿½gg till din labbkod hï¿½r. Det gï¿½r bra att ï¿½ndra var som helst i
+	// koden i ï¿½vrigt, men mycket kan samlas hï¿½r. Du kan utgï¿½ frï¿½n den
+	// globala listroten, gSpriteRoot, fï¿½r att kontrollera alla sprites
+	// hastigheter och positioner, eller arbeta frï¿½n egna globaler.
 }
 
 // Drawing routine
 void Display()
 {
 	SpritePtr sp;
-	
+
 	glClearColor(0, 0, 0.2, 1);
-	glClear(GL_COLOR_BUFFER_BIT+GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT + GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+
 	DrawBackground();
-	
+
 	SpriteBehavior(); // Din kod!
-	
-// Loop though all sprites. (Several loops in real engine.)
+
+	// Loop though all sprites. (Several loops in real engine.)
 	sp = gSpriteRoot;
 	do
 	{
@@ -51,7 +50,7 @@ void Display()
 		DrawSprite(sp);
 		sp = sp->next;
 	} while (sp != NULL);
-	
+
 	glutSwapBuffers();
 }
 
@@ -72,35 +71,35 @@ void Timer(int value)
 float someValue = 0.0;
 
 void Key(unsigned char key,
-         __attribute__((unused)) int x,
-         __attribute__((unused)) int y)
+				 __attribute__((unused)) int x,
+				 __attribute__((unused)) int y)
 {
-  switch (key)
-  {
-    case '+':
-    	someValue += 0.1;
-    	printf("someValue = %f\n", someValue);
-    	break;
-    case '-':
-    	someValue -= 0.1;
-    	printf("someValue = %f\n", someValue);
-    	break;
-    case 0x1b:
-      exit(0);
-  }
+	switch (key)
+	{
+	case '+':
+		someValue += 0.1;
+		printf("someValue = %f\n", someValue);
+		break;
+	case '-':
+		someValue -= 0.1;
+		printf("someValue = %f\n", someValue);
+		break;
+	case 0x1b:
+		exit(0);
+	}
 }
 
 void Init()
 {
 	TextureData *sheepFace, *blackFace, *dogFace, *foodFace;
-	
+
 	LoadTGATextureSimple("bilder/leaves.tga", &backgroundTexID); // Bakgrund
-	
-	sheepFace = GetFace("bilder/sheep.tga"); // Ett fŒr
-	blackFace = GetFace("bilder/blackie.tga"); // Ett svart fŒr
-	dogFace = GetFace("bilder/dog.tga"); // En hund
-	foodFace = GetFace("bilder/mat.tga"); // Mat
-	
+
+	sheepFace = GetFace("bilder/sheep.tga");	 // Ett fï¿½r
+	blackFace = GetFace("bilder/blackie.tga"); // Ett svart fï¿½r
+	dogFace = GetFace("bilder/dog.tga");			 // En hund
+	foodFace = GetFace("bilder/mat.tga");			 // Mat
+
 	NewSprite(sheepFace, 100, 200, 1, 1);
 	NewSprite(sheepFace, 200, 100, 1.5, -1);
 	NewSprite(sheepFace, 250, 200, -1, 1.5);
@@ -113,15 +112,15 @@ int main(int argc, char **argv)
 	glutInitWindowSize(800, 600);
 	glutInitContextVersion(3, 2);
 	glutCreateWindow("SpriteLight demo / Flocking");
-	
+
 	glutDisplayFunc(Display);
 	glutTimerFunc(20, Timer, 0); // Should match the screen synch
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Key);
-	
+
 	InitSpriteLight();
 	Init();
-	
+
 	glutMainLoop();
 	return 0;
 }

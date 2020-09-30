@@ -5,11 +5,11 @@
 // Eeek! Sprite light! Sprite light!
 
 #ifdef __APPLE__
-	#include <OpenGL/gl3.h>
-	#include "MicroGlut.h"
+#include <OpenGL/gl3.h>
+#include "MicroGlut.h"
 #else
-	#include <GL/gl.h>
-	#include "MicroGlut.h"
+#include <GL/gl.h>
+#include "MicroGlut.h"
 #endif
 
 #include "LoadTGA.h"
@@ -26,7 +26,7 @@ typedef struct SpriteRec
 	FPoint speed;
 	GLfloat rotation;
 	struct SpriteRec *next;
-	
+
 	// Add custom sprite data here as needed
 } SpriteRec, *SpritePtr;
 
