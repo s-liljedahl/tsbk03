@@ -362,7 +362,7 @@ void init()
     ball[0].P = SetVector(0, 0, 0);
     ball[1].P = SetVector(0, 0, 0);
     ball[2].P = SetVector(0, 0, 0);
-    ball[3].P = SetVector(0, 0, 1.00);
+    ball[3].P = SetVector(0, 0, 5.00);
 
     cam = SetVector(0, 1.2, 2.5);
     point = SetVector(0, 0, 1.0);

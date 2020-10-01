@@ -210,6 +210,8 @@ void updateWorld()
         // rotation speed
     }
 
+    GLfloat time = glutGet(GLUT_ELAPSED_TIME) / 200.0;
+
     // Update state, follows the book closely
     for (i = 0; i < kNumBalls; i++)
     {
@@ -218,13 +220,13 @@ void updateWorld()
 
         // YOUR CODE HERE
         // Note: omega is not set. How do you calculate it?
-        vec3 v = ball[i].P;
+        vec3 v = ball[i].v;
         // speed X up
-        vec3 rot_axis = CrossProduct(SetVector(0, 1, 0), v);
-        GLfloat speed = Norm(v);
-        mat4 rot = ArbRotate(rot_axis, speed);
-        // add rotation
-        ball[i].R = Mult(ball[i].R, rot);
+        vec3 rot_axis = CrossProduct(v, SetVector(0, 1, 0));
+        GLfloat speed = Norm(rot_axis);
+
+        mat4 rot = ArbRotate(rot_axis, - speed * time);
+        ball[i].R = rot;
 
         // Speed
         // v := P * 1/mass

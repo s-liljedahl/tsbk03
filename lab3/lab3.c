@@ -94,7 +94,7 @@ Material ballMt = {{1.0, 1.0, 1.0, 1.0}, {1.0, 1.0, 1.0, 0.0}, 0.1, 0.6, 1.0, 50
 
 enum
 {
-    kNumBalls = 16
+    kNumBalls = 1
 }; // Change as desired, max 16
 
 //------------------------------Globals---------------------------------
@@ -185,31 +185,30 @@ void updateWorld()
     for (i = 0; i < kNumBalls; i++)
     {
         // YOUR CODE HERE
-      	// mat4 ArbRotate(vec3 axis, GLfloat fi);
-        mat4 J = IdentityMatrix();
-        mat4 I = IdentityMatrix();
 
         // rotation speed
 
 
     }
 
+    GLfloat time = glutGet(GLUT_ELAPSED_TIME) / 200.0;
+
     // Update state, follows the book closely
     for (i = 0; i < kNumBalls; i++)
     {
         vec3 dX, dP, dL, dO;
-        mat4 Rd;
+        mat4 Rd, rot;
 
 
         // YOUR CODE HERE
         // Note: omega is not set. How do you calculate it?
-        vec3 v = ball[i].P;
+        vec3 v = ball[i].v;
         // speed X up
-        vec3 rot_axis = CrossProduct(SetVector(0, 1, 0), v);
-        GLfloat speed = Norm(v);
-        mat4 rot = ArbRotate(rot_axis, speed);
-        // add rotation
-        ball[i].R = Mult(ball[i].R, rot);
+        vec3 rot_axis = CrossProduct(v, SetVector(0, 1, 0));
+        GLfloat speed = Norm(rot_axis);
+
+        rot = ArbRotate(rot_axis, - speed * time);
+        ball[i].R = rot;
 
         // Speed
         // v := P * 1/mass
@@ -310,7 +309,7 @@ void init()
     int i;
     for (i = 0; i < kNumBalls; i++)
     {
-        sprintf(textureStr, "balls/%d.tga", i);
+        sprintf(textureStr, "balls/8.tga", i);
         LoadTGATextureSimple(textureStr, &ball[i].tex);
     }
     free(textureStr);
@@ -327,10 +326,10 @@ void init()
     ball[1].X = SetVector(0, 0, 0.5);
     ball[2].X = SetVector(0.0, 0, 1.0);
     ball[3].X = SetVector(0, 0, 1.5);
-    ball[0].P = SetVector(0, 0, 0);
+    ball[0].P = SetVector(1.0, 0, 1.5);
     ball[1].P = SetVector(0, 0, 0);
     ball[2].P = SetVector(0, 0, 0);
-    ball[3].P = SetVector(0, 0, 1.00);
+    ball[3].P = SetVector(0.5, 0, 0.5);
 
     cam = SetVector(0, 2, 2);
     point = SetVector(0, 0, 0);
@@ -355,7 +354,6 @@ void display(void)
     glClearColor(0.1, 0.1, 0.3, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //    int time = glutGet(GLUT_ELAPSED_TIME);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
