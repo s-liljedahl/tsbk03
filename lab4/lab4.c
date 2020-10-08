@@ -66,6 +66,7 @@ void SpriteBehavior() // Din kod!
 			tp_h = (avgPosH / count) - sp->position.h;
 			tp_v = (avgPosV / count) - sp->position.v;
 			v = Normalize(SetVector(tp_v, 0, tp_h));
+			printFloat(tp_v);
 
 			if (abs(tp_h) > kMindistance && abs(tp_v) > kMindistance) {
 				sp->speed.v = v.x;
@@ -74,7 +75,6 @@ void SpriteBehavior() // Din kod!
 				sp->speed.v = 0;
 				sp->speed.h = 0;
 			}
-
 		}
 
 		sp = sp->next;
