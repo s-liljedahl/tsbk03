@@ -13,6 +13,8 @@
 #endif
 
 #include "LoadTGA.h"
+#include "GL_utilities.h"
+#include "VectorUtils3.h"
 
 typedef struct FPoint
 {
@@ -25,6 +27,11 @@ typedef struct SpriteRec
 	TextureData *face;
 	FPoint speed;
 	GLfloat rotation;
+
+	vec3 V_avoid;
+	vec3 V_align;
+	vec3 P_cohesion;
+
 	struct SpriteRec *next;
 
 	// Add custom sprite data here as needed

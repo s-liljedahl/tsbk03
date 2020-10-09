@@ -58,6 +58,11 @@ struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GL
 	sp->speed.v = vs;
 	sp->face = f;
 	sp->rotation = 0;
+
+	sp->V_align = SetVector(0,0,0);
+	sp->V_avoid = SetVector(0,0,0);
+	sp->P_cohesion = SetVector(0,0,0);
+
 	return sp;
 }
 
