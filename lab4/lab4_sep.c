@@ -19,7 +19,7 @@
 #include "VectorUtils3.h"
 
 // L�gg till egna globaler h�r efter behov.
-GLfloat kAlignmentWeight = 0;
+GLfloat kAlignmentWeight = 0.005;
 GLfloat kCohesionWeight = 0.05;
 GLfloat kAvoidanceWeight = 0.1;
 
@@ -77,8 +77,8 @@ void SpriteBehavior() // Din kod!
 					// cohesion: average position
 					currentBoid->P_cohesion = VectorAdd(currentBoid->P_cohesion, SetVector(diff_H, diff_V, 0.0));
 					// align: average speed diff
-					speedDiffH = currentBoid->speed.h - otherBoid->speed.h;
-					speedDiffV = currentBoid->speed.v - otherBoid->speed.v;
+					speedDiffH = otherBoid->speed.h - currentBoid->speed.h;
+					speedDiffV = otherBoid->speed.v - currentBoid->speed.v;
 					currentBoid->V_align = VectorAdd(currentBoid->V_align, SetVector(speedDiffH, speedDiffV, 0.0));
 
 					// avoid: check for avoidable
