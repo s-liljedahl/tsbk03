@@ -29,16 +29,18 @@ GLfloat speedLimit = 2;
 
 GLfloat limitSpeed(GLfloat speed)
 {
-	if (abs(speed) > speedLimit) {
-		return (speed / abs(speed)) * speedLimit;
-	}
-	return speed;
+	return (speed > speedLimit) ? speedLimit : speed;
+}
+
+GLfloat calcDist(GLfloat diff1, GLfloat diff2)
+{
+	return sqrt(pow(diff1, 2) + pow(diff2, 2));
 }
 
 void SpriteBehavior() // Din kod!
 {
-	SpritePtr sp;
-	SpritePtr boid;
+	SpritePtr currentBoid;
+	SpritePtr otherBoid;
 	SpritePtr updateSp;
 	GLfloat speedDiffH, speedDiffV;
 	GLfloat count;
@@ -49,128 +51,89 @@ void SpriteBehavior() // Din kod!
 	// hastigheter och positioner, eller arbeta fr�n egna globaler.
 
 	// Loop though all sprites. (Several loops in real engine.)
-	sp = gSpriteRoot;
+	currentBoid = gSpriteRoot;
 	do
 	{
 		count = 0;
 
-		sp->V_align = SetVector(0,0,0);
-		sp->V_avoid = SetVector(0,0,0);
-		sp->P_cohesion = SetVector(0,0,0);
+		currentBoid->V_align = SetVector(0, 0, 0);
+		currentBoid->V_avoid = SetVector(0, 0, 0);
+		currentBoid->P_cohesion = SetVector(0, 0, 0);
 
 		// check all neighbours
-		boid = gSpriteRoot;
+		otherBoid = gSpriteRoot;
 		do
 		{
-			if (boid != sp)
+			if (otherBoid != currentBoid)
 			{ // not itself
 
-				GLfloat diff_H = boid->position.h - sp->position.h;
-				GLfloat diff_V = boid->position.v - sp->position.v;
+				GLfloat diff_H = otherBoid->position.h - currentBoid->position.h;
+				GLfloat diff_V = otherBoid->position.v - currentBoid->position.v;
+				GLfloat dist = calcDist(diff_H, diff_V);
 
-				if (abs(diff_V) < kMaxdistance &&
-						abs(diff_H) < kMaxdistance)
+				if (dist < kMaxdistance)
 				{
 					count++;
 					// cohesion: average position
-					sp->P_cohesion = VectorAdd(sp->P_cohesion, SetVector(diff_H, diff_V, 0.0));
-
+					currentBoid->P_cohesion = VectorAdd(currentBoid->P_cohesion, SetVector(diff_H, diff_V, 0.0));
 					// align: average speed diff
-					speedDiffH = sp->speed.h - boid->speed.h;
-					speedDiffV = sp->speed.v - boid->speed.v;
-					sp->V_align = VectorAdd(sp->V_align, SetVector(speedDiffH, speedDiffV, 0.0));
-
+					speedDiffH = currentBoid->speed.h - otherBoid->speed.h;
+					speedDiffV = currentBoid->speed.v - otherBoid->speed.v;
+					currentBoid->V_align = VectorAdd(currentBoid->V_align, SetVector(speedDiffH, speedDiffV, 0.0));
 
 					// avoid: check for avoidable
-					if (abs(diff_V) < kMindistance && abs(diff_H) < kMindistance)
+					if (dist < kMindistance)
 					{
-						sp->V_avoid = VectorSub(sp->V_avoid, SetVector(diff_H, diff_V, 0.0));
+						currentBoid->V_avoid = VectorSub(currentBoid->V_avoid, SetVector(diff_H, diff_V, 0.0));
 					}
-
 				}
 			}
-			boid = boid->next;
-		} while (boid != NULL);
+			otherBoid = otherBoid->next;
+		} while (otherBoid != NULL);
 
 		if (count > 0)
 		{
+			currentBoid->P_cohesion = Normalize(ScalarMult((currentBoid->P_cohesion), 1.0 / count));
 
-			// printVec3(sp->P_cohesion);
-			// printVec3(sp->V_avoid);
-			// printVec3(sp->V_align);
-			//
-			// printFloat(Norm(sp->P_cohesion));
-			// printFloat(Norm(sp->V_avoid));
-			// printFloat(Norm(sp->V_align));
-
-			if (Norm(sp->V_align) > 0) {
-				sp->V_align = Normalize(ScalarMult((sp->V_align), 1.0/count));
-			} else {
-				sp->V_align = SetVector(0,0,0);
+			if (Norm(currentBoid->V_align) > 0)
+			{
+				currentBoid->V_align = Normalize(ScalarMult((currentBoid->V_align), 1.0 / count));
+			}
+			else
+			{
+				currentBoid->V_align = SetVector(0, 0, 0);
 			}
 
-			sp->V_avoid = (ScalarMult((sp->V_avoid), 1.0 / count));
-			if (Norm(sp->V_avoid) > 0) {
-				GLfloat avoid_factor  = 1 - Norm(sp->V_avoid) / kMindistance;
-				sp->V_avoid = ScalarMult(Normalize(sp->V_avoid), avoid_factor);
+			currentBoid->V_avoid = ScalarMult((currentBoid->V_avoid), 1.0 / count);
+			if (Norm(currentBoid->V_avoid) > 0)
+			{
+				GLfloat avoid_factor = 1 - Norm(currentBoid->V_avoid) / kMindistance;
+				currentBoid->V_avoid = ScalarMult(Normalize(currentBoid->V_avoid), avoid_factor);
 			}
-
-			// if (abs(sp->P_cohesion.x) < kMindistance && abs(sp->P_cohesion.y) < kMindistance) {
-			// 	sp->P_cohesion = SetVector(0,0,0);
-			// } else {
-				sp->P_cohesion = Normalize(ScalarMult((sp->P_cohesion), 1.0 / count));
-			// }
-
-			printVec3(sp->P_cohesion);
-			// printVec3(sp->V_avoid);
-			// printVec3(sp->V_align);
-
-			// printFloat(Norm(sp->P_cohesion));
-			// printFloat(Norm(sp->V_avoid));
-			// printFloat(Norm(sp->V_align));
-			printf("\n");
 		}
 
-
-		sp = sp->next;
-	} while (sp != NULL);
-
-
+		currentBoid = currentBoid->next;
+	} while (currentBoid != NULL);
 
 	// second loop
 	updateSp = gSpriteRoot;
 	do
 	{
 		GLfloat speedH =
-			updateSp->V_align.x * kAlignmentWeight +
-			updateSp->V_avoid.x * kAvoidanceWeight +
-			updateSp->P_cohesion.x * kCohesionWeight;
+				updateSp->V_align.x * kAlignmentWeight +
+				updateSp->V_avoid.x * kAvoidanceWeight +
+				updateSp->P_cohesion.x * kCohesionWeight;
 
 		GLfloat speedV =
-			updateSp->V_align.y * kAlignmentWeight +
-			updateSp->V_avoid.y * kAvoidanceWeight +
-			updateSp->P_cohesion.y * kCohesionWeight;
+				updateSp->V_align.y * kAlignmentWeight +
+				updateSp->V_avoid.y * kAvoidanceWeight +
+				updateSp->P_cohesion.y * kCohesionWeight;
 
-		// printFloat(updateSp->speed.h);
-		// printVec3(updateSp->P_cohesion);
-		// printVec3(updateSp->V_avoid);
-		// printVec3(updateSp->V_align);
-		// printFloat(speedH);
-		// printFloat(limitSpeed(speedH));
-		// printFloat(speedV);
-		// printFloat(limitSpeed(speedV));
-		// printf("end \n");
-
-		updateSp->speed.h += (speedH);
-		updateSp->speed.v += (speedV);
-
-		updateSp->speed.h = limitSpeed(updateSp->speed.h);
-		updateSp->speed.v = limitSpeed(updateSp->speed.v);
+		updateSp->speed.h += limitSpeed(speedH);
+		updateSp->speed.v += limitSpeed(speedV);
 
 		updateSp = updateSp->next;
 	} while (updateSp != NULL);
-
-
 }
 
 // Drawing routine
@@ -246,19 +209,16 @@ void Init()
 	dogFace = GetFace("bilder/dog.tga");			 // En hund
 	foodFace = GetFace("bilder/mat.tga");			 // Mat
 
-
 	// NewSprite(TextureData *f, pos h, pos v, speed hs, speed vs)
 
-	NewSprite(sheepFace, 450, 400, 1, 1);
-	NewSprite(sheepFace, 200, 100, 1.5, -1);
-	NewSprite(sheepFace, 700, 400, -1, 1.5);
-	NewSprite(sheepFace, 700, 0, -1, 1.5);
-	NewSprite(sheepFace, 50, 50, 2, 1.5);
-	NewSprite(sheepFace, 350, 50, 2, 1.5);
-	NewSprite(sheepFace, 300, 50, 2, 1.5);
-	NewSprite(sheepFace, 175, 90, -0.5, 1.5);
-	NewSprite(dogFace, 10, 40, 2, 0);
-	NewSprite(dogFace, 500, 10, -2, 0);
+	for (int n = 0; n < 15; n++)
+	{
+		NewSprite(sheepFace,
+							rand() % 700 + 50,
+							rand() % 500 + 50,
+							-2,
+							0);
+	}
 }
 
 int main(int argc, char **argv)
