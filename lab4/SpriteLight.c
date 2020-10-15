@@ -43,7 +43,7 @@ TextureData *GetFace(char *fileName)
 	return fp;
 }
 
-struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GLfloat vs)
+struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GLfloat vs, bool isRandom)
 {
 	SpritePtr sp;
 
@@ -51,7 +51,6 @@ struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GL
 
 	sp->next = gSpriteRoot;
 	gSpriteRoot = sp;
-
 	sp->position.h = h;
 	sp->position.v = v;
 	sp->speed.h = hs;
@@ -59,9 +58,10 @@ struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GL
 	sp->face = f;
 	sp->rotation = 0;
 
-	sp->V_align = SetVector(0,0,0);
-	sp->V_avoid = SetVector(0,0,0);
-	sp->P_cohesion = SetVector(0,0,0);
+	sp->V_align = SetVector(0, 0, 0);
+	sp->V_avoid = SetVector(0, 0, 0);
+	sp->P_cohesion = SetVector(0, 0, 0);
+	sp->isRandom = isRandom;
 
 	return sp;
 }

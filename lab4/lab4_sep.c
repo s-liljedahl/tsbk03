@@ -23,6 +23,8 @@ GLfloat kAlignmentWeight = 0.005;
 GLfloat kCohesionWeight = 0.05;
 GLfloat kAvoidanceWeight = 0.1;
 
+GLfloat kRandomWeight = 0.5;
+
 GLfloat kMaxdistance = 200;
 GLfloat kMindistance = 50;
 GLfloat speedLimit = 2;
@@ -132,6 +134,14 @@ void SpriteBehavior() // Din kod!
 		updateSp->speed.h += limitSpeed(speedH);
 		updateSp->speed.v += limitSpeed(speedV);
 
+		if (updateSp->isRandom)
+		{
+			GLfloat random_move = (((float)rand() / (float)RAND_MAX - 0.5) * kRandomWeight);
+			updateSp->speed.h += random_move;
+			updateSp->speed.v += random_move;
+			printFloat(random_move);
+		}
+
 		updateSp = updateSp->next;
 	} while (updateSp != NULL);
 }
@@ -202,7 +212,7 @@ void Init()
 {
 	TextureData *sheepFace, *blackFace, *dogFace, *foodFace;
 
-	LoadTGATextureSimple("bilder/leaves.tga", &backgroundTexID); // Bakgrund
+	// LoadTGATextureSimple("bilder/leaves.tga", &backgroundTexID); // Bakgrund
 
 	sheepFace = GetFace("bilder/sheep.tga");	 // Ett f�r
 	blackFace = GetFace("bilder/blackie.tga"); // Ett svart f�r
@@ -217,8 +227,10 @@ void Init()
 							rand() % 700 + 50,
 							rand() % 500 + 50,
 							-2,
-							0);
+							0, false);
 	}
+
+	NewSprite(dogFace, 0, 0, 1, 1, true);
 }
 
 int main(int argc, char **argv)

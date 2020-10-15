@@ -9,10 +9,10 @@ l4_sep: $(commondir)LoadTGA.c SpriteLight.c lab4_sep.c $(commondir)VectorUtils3.
 
 
 m4 : lab4.c SpriteLight.c $(commondir)GL_utilities.c $(commondir)VectorUtils3.c $(commondir)loadobj.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c
-	gcc -Wall -o lab4 -I$(commondir) -I$(commondir)/Mac	-DGL_GLEXT_PROTOTYPES lab4.c SpriteLight.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Mac/MicroGlut.m -framework OpenGL -framework Cocoa -lm -Wno-deprecated-declarations
+	gcc -Wall -o lab4 -I$(commondir) -I$(commondir)/Mac	-DGL_GLEXT_PROTOTYPES lab4.c SpriteLight.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Mac/MicroGlut.m -framework OpenGL -framework Cocoa -lm -Wno-deprecated-declarations && ./lab4
 
 m4_sep : lab4_sep.c SpriteLight.c $(commondir)GL_utilities.c $(commondir)VectorUtils3.c $(commondir)loadobj.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c
-	gcc -Wall -o lab4_sep -I$(commondir) -I$(commondir)/Mac	-DGL_GLEXT_PROTOTYPES lab4_sep.c SpriteLight.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Mac/MicroGlut.m -framework OpenGL -framework Cocoa -lm -Wno-deprecated-declarations
+	gcc -Wall -o lab4_sep -I$(commondir) -I$(commondir)/Mac	-DGL_GLEXT_PROTOTYPES lab4_sep.c SpriteLight.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Mac/MicroGlut.m -framework OpenGL -framework Cocoa -lm -Wno-deprecated-declarations && ./lab4_sep
 
 
 clean:

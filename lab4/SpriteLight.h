@@ -27,7 +27,7 @@ typedef struct SpriteRec
 	TextureData *face;
 	FPoint speed;
 	GLfloat rotation;
-
+	bool isRandom;
 	vec3 V_avoid;
 	vec3 V_align;
 	vec3 P_cohesion;
@@ -44,7 +44,7 @@ extern long gWidth, gHeight;
 
 // Functions
 TextureData *GetFace(char *fileName);
-struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GLfloat vs);
+struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GLfloat vs, bool isRandom);
 void HandleSprite(SpritePtr sp);
 void DrawSprite(SpritePtr sp);
 void DrawBackground();
