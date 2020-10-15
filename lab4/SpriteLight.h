@@ -48,5 +48,6 @@ struct SpriteRec *NewSprite(TextureData *f, GLfloat h, GLfloat v, GLfloat hs, GL
 void HandleSprite(SpritePtr sp);
 void DrawSprite(SpritePtr sp);
 void DrawBackground();
+void DrawDog(GLfloat posH, GLfloat posV);
 
 void InitSpriteLight();

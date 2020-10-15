@@ -19,16 +19,20 @@
 #include "VectorUtils3.h"
 
 // L�gg till egna globaler h�r efter behov.
-GLfloat kAlignmentWeight = 0.01;
+GLfloat kAlignmentWeight = 0.005;
 GLfloat kCohesionWeight = 0.05;
 GLfloat kAvoidanceWeight = 0.1;
 
 GLfloat kRandomWeight = 0.4;
+GLfloat kDogWeight = 0.4;
+GLfloat kDogDistance = 100;
 
-GLfloat kMaxdistance = 100;
+GLfloat kMaxdistance = 150;
 GLfloat kMindistance = 50;
-GLfloat speedLimit = 1.5;
+GLfloat speedLimit = 1;
 
+GLfloat dogPosH = 200;
+GLfloat dogPosV = 200;
 
 GLfloat limitSpeed(GLfloat speed)
 {
@@ -39,10 +43,8 @@ GLfloat limitSpeed(GLfloat speed)
 	return speed;
 }
 
-
 GLfloat calcDist(GLfloat diff1, GLfloat diff2)
 {
-	GLfloat angle = diff1;
 	return sqrt(pow(diff1, 2) + pow(diff2, 2));
 }
 
@@ -80,7 +82,13 @@ void SpriteBehavior() // Din kod!
 				GLfloat diff_V = otherBoid->position.v - currentBoid->position.v;
 				GLfloat dist = calcDist(diff_H, diff_V);
 
-				if (dist < kMaxdistance)
+				GLfloat distDog = calcDist(dogPosH - currentBoid->position.h, dogPosV - currentBoid->position.v);
+				if (distDog < kDogDistance) {
+					vec3 avoid  = ScalarMult(SetVector(dogPosH - currentBoid->position.h, dogPosV - currentBoid->position.v, 0.0), kDogWeight);
+					GLfloat avoid_factor = (1 - Norm(avoid) / kDogDistance);
+					currentBoid->V_avoid = VectorSub(currentBoid->V_avoid, ScalarMult(avoid, avoid_factor));
+				}
+				else if (dist < kMaxdistance)
 				{
 					count++;
 					// cohesion: average position
@@ -107,7 +115,7 @@ void SpriteBehavior() // Din kod!
 			if (Norm(currentBoid->V_align) > 0)
 			{
 				currentBoid->V_align = Normalize(ScalarMult((currentBoid->V_align), 1.0 / count));
-			}
+			}someValue
 			else
 			{
 				currentBoid->V_align = SetVector(0, 0, 0);
@@ -142,13 +150,11 @@ void SpriteBehavior() // Din kod!
 		if (updateSp->isRandom)
 		{
 			GLfloat random_move = (((float)rand() / (float)RAND_MAX - 0.5) * kRandomWeight);
-			GLfloat random_moveV = (((float)rand() / (float)RAND_MAX - 0.5) * kRandomWeight);
-			updateSp->speed.h += random_move;
-			updateSp->speed.v += random_moveV;
-			// speedH += random_move;
-			// speedV += random_moveV;
+			// updateSp->speed.h += random_move;
+			// updateSp->speed.v += random_move;
+			speedH += random_move;
+			speedV += random_move;
 			// printFloat(random_move);
-			// printFloat(random_moveV);
 		}
 
 		updateSp->speed.h += (speedH);
@@ -156,6 +162,7 @@ void SpriteBehavior() // Din kod!
 
 		updateSp->speed.h = limitSpeed(updateSp->speed.h);
 		updateSp->speed.v = limitSpeed(updateSp->speed.v);
+
 
 		updateSp = updateSp->next;
 	} while (updateSp != NULL);
@@ -174,6 +181,7 @@ void Display()
 
 	DrawBackground();
 
+	DrawDog(dogPosH, dogPosV);
 	SpriteBehavior(); // Din kod!
 
 	// Loop though all sprites. (Several loops in real engine.)
@@ -184,7 +192,6 @@ void Display()
 		DrawSprite(sp);
 		sp = sp->next;
 	} while (sp != NULL);
-
 
 	glutSwapBuffers();
 }
@@ -212,14 +219,25 @@ void Key(unsigned char key,
 	switch (key)
 	{
 	case '+':
-		kRandomWeight += 0.1;
-		printf("someValue = %f\n", kRandomWeight);
+		kDogWeight += 0.1;
+		printf("someValue = %f\n", kDogWeight);
 		break;
 	case '-':
-		kRandomWeight -= 0.1;
-		printf("someValue = %f\n", kRandomWeight);
+		kDogWeight -= 0.1;
+		printf("someValue = %f\n", kDogWeight);
 		break;
-
+	case 'w':
+		dogPosV += 10;
+		break;
+	case 'a':
+		dogPosH -= 10;
+		break;
+	case 's':
+		dogPosV -= 10;
+		break;
+	case 'd':
+		dogPosH += 10;
+		break;
 	case 0x1b:
 		exit(0);
 	}

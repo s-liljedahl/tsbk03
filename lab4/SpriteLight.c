@@ -28,6 +28,8 @@ GLuint program;
 //  if (in<0) return -1*in;
 //  else return in;
 //}
+TextureData *dogFace;
+
 
 TextureData *GetFace(char *fileName)
 {
@@ -116,6 +118,26 @@ void DrawSprite(SpritePtr sp)
 	glDrawArrays(GL_TRIANGLES, 0, 6);		 // draw object
 }
 
+void DrawDog(GLfloat posH, GLfloat posV)
+{
+	mat4 trans, rot, scale, m;
+
+	glUseProgram(program);
+	// Update matrices
+	scale = S((float)dogFace->width / gWidth * 2, (float)dogFace->height / gHeight * 2, 1);
+	// trans = T(posH, posV, 0);
+	trans = T(posH / gWidth * 2 - 1, posV / gHeight * 2 - 1, 0);
+	rot = Rz(0 * 3.14 / 180);
+	m = Mult(trans, Mult(scale, rot));
+
+	glUniformMatrix4fv(glGetUniformLocation(program, "m"), 1, GL_TRUE, m.m);
+	glBindTexture(GL_TEXTURE_2D, dogFace->texID);
+
+	// Draw
+	glBindVertexArray(vertexArrayObjID); // Select VAO
+	glDrawArrays(GL_TRIANGLES, 0, 6);		 // draw object
+}
+
 void DrawBackground()
 {
 	mat4 scale;
@@ -188,6 +210,8 @@ void InitSpriteLight()
 																												//	LoadTGATextureSimple("maskros512.tga", &tex); // 5c
 
 	// End of upload of geometry
+	dogFace = GetFace("bilder/dog.tga");
+
 
 	printError("init arrays");
 }
