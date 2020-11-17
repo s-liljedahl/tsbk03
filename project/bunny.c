@@ -16,6 +16,7 @@
 #include "VectorUtils3.h"
 #include "loadobj.h"
 #include "LoadTGA.h"
+#include "simplefont.h"
 
 //constants
 const int initWidth = 512, initHeight = 512;
@@ -31,16 +32,16 @@ mat4 projectionMatrix;
 
 // Globals
 // * Model(s)
-Model *bunny, *sphere;
-Model *teddy;
-Model *teapot;
-Model *cube;
+Model *bunny, *sphere, *teddy, *teapot, *cube;
 Model *currentModel;
 
 // * Reference(s) to shader program(s)
-#define kNumPrograms 4
+#define kNumPrograms 5
+#define stringMaxSize 32
 GLuint program[kNumPrograms];
 int currentProgram;
+char programName[kNumPrograms][stringMaxSize] = {"phong + passthrough", "passthrough", "flat", "balloon", "expand"};
+char currentName[stringMaxSize];
 // * Texture(s)
 GLuint texture;
 
@@ -67,7 +68,7 @@ GLfloat specularExponent[] = {200.0, 200.0, 60.0, 50.0, 300.0, 150.0};
 void init(void)
 {
 	// three vertex buffer objects, used for uploading the data
-	unsigned int normalBufferObjID;
+	// unsigned int normalBufferObjID;
 
 	dumpInfo();
 
@@ -82,12 +83,14 @@ void init(void)
 	worldToView = lookAt(0, 0, 1.5, 0, 0, 0, 0, 1, 0);
 	modelToWorld = IdentityMatrix();
 
-	currentProgram = 1;
+	currentProgram = 0;
+
 	// Load and compile shader
 	program[0] = loadShadersG("shaders/bunny.vert", "shaders/bunny.frag", "shaders/passthrough.gs");
 	program[1] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/passthrough.gs");
 	program[2] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/flatshading.gs");
 	program[3] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/balloon.gs");
+	program[4] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/expand.gs");
 
 	glUseProgram(program[currentProgram]);
 	printError("init shader");
@@ -112,7 +115,7 @@ void init(void)
 		glUseProgram(program[i]);
 		// Load light sources
 		glUniformMatrix4fv(glGetUniformLocation(program[i], "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
-		glUniform1iv(glGetUniformLocation(program[i], "index"), 4, i);
+		glUniform1iv(glGetUniformLocation(program[i], "index"), 4, &i);
 	}
 	printError("init programs");
 }
@@ -133,13 +136,12 @@ void display(void)
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLfloat s = currentModel == sphere ? 0.8 : 0.8;
+	GLfloat t_anim = fabs(cos(t / 1000));
+	GLfloat s = currentProgram >= 3 ? (0.8 + (t_anim / 10)) : 0.8;
 
 	mat4 r = rotate ? Mult(Rz(t / 5000), Ry(t / -5000)) : IdentityMatrix();
 	mat4 MTW = Mult(modelToWorld, S(s, s, s));
 	mat4 modelToWorldToView = Mult(Mult(worldToView, MTW), r); // Combine to one matrix
-
-	GLfloat t_anim = cos(t / 1000);
 
 	glUniform1f(glGetUniformLocation(program[currentProgram], "t"), t_anim);
 	glUniformMatrix4fv(glGetUniformLocation(program[currentProgram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
@@ -148,6 +150,11 @@ void display(void)
 	//draw the model
 	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", NULL);
 	printError("display");
+
+	strcpy(currentName, programName[currentProgram]);
+	sfDrawString(20, 20, currentName);
+	printError("display text ");
+
 	glutSwapBuffers();
 }
 
@@ -186,11 +193,11 @@ void Key(unsigned char key)
 	switch (key)
 	{
 	case '+':
-		printf("%d \n", currentProgram);
+		printf("%d %s \n", currentProgram, currentName);
 		currentProgram = currentProgram == kNumPrograms - 1 ? 0 : currentProgram + 1;
 		break;
 	case '-':
-		printf("%d \n", currentProgram);
+		printf("%d %s \n", currentProgram, currentName);
 		currentProgram = currentProgram == 0 ? kNumPrograms - 1 : currentProgram - 1;
 		break;
 	case '1':
@@ -241,6 +248,9 @@ int main(int argc, char *argv[])
 	glutMouseFunc(mouseUpDown);
 	glutMotionFunc(mouseDragged);
 	glutKeyboardFunc(Key);
+
+	sfMakeRasterFont(); // init font
+	sfSetRasterSize(500, 500);
 
 	init();
 	glutMainLoop();
