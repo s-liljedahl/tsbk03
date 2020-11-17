@@ -24,7 +24,7 @@ void main()
 
   for(int i = 0; i < gl_in.length(); i++)
   {
-    gl_Position = gl_in[i].gl_Position + (t * 0.1 * normalize(vec4(exNormal[i], 1.0)));
+    gl_Position = gl_in[i].gl_Position + (middle * t * 2);
     exNormalG = exNormal[i];
     EmitVertex();
   }
