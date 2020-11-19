@@ -36,11 +36,11 @@ Model *bunny, *sphere, *teddy, *teapot, *cube;
 Model *currentModel;
 
 // * Reference(s) to shader program(s)
-#define kNumPrograms 5
+#define kNumPrograms 7
 #define stringMaxSize 32
 GLuint program[kNumPrograms];
 int currentProgram;
-char programName[kNumPrograms][stringMaxSize] = {"phong + passthrough", "passthrough", "flat", "balloon", "expand"};
+char programName[kNumPrograms][stringMaxSize] = {"phong + passthrough", "passthrough", "flat", "balloon", "expand", "texture", "grass"};
 char currentName[stringMaxSize];
 // * Texture(s)
 GLuint texture;
@@ -91,12 +91,14 @@ void init(void)
 	program[2] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/flatshading.gs");
 	program[3] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/balloon.gs");
 	program[4] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/expand.gs");
+	program[5] = loadShadersG("shaders/texture.vert", "shaders/texture.frag", "shaders/passthrough_tex.gs");
+	program[6] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/grass.gs");
 
 	glUseProgram(program[currentProgram]);
 	printError("init shader");
 
 	// Upload geometry to the GPU:
-	bunny = LoadModelPlus("objects/stanford-bunny.obj");
+	bunny = LoadModelPlus("objects/bunny.obj");
 	teddy = LoadModelPlus("objects/teddy.obj");
 	teapot = LoadModelPlus("objects/teapot.obj");
 	cube = LoadModelPlus("objects/cubeplus.obj");
@@ -110,12 +112,19 @@ void init(void)
 	glUniform1iv(glGetUniformLocation(program[0], "isDirectional"), 4, isDirectional);
 	printError("init 0");
 
+	glActiveTexture(GL_TEXTURE0);
+
 	for (int i = 0; i < kNumPrograms; i++)
 	{
 		glUseProgram(program[i]);
-		// Load light sources
+
 		glUniformMatrix4fv(glGetUniformLocation(program[i], "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 		glUniform1iv(glGetUniformLocation(program[i], "index"), 4, &i);
+
+		// load textures
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glUniform1i(glGetUniformLocation(program[i], "tex"), 0); // Texture unit 0
+		LoadTGATextureSimple("objects/scale.tga", &texture);
 	}
 	printError("init programs");
 }
@@ -137,7 +146,7 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	GLfloat t_anim = fabs(cos(t / 1000));
-	GLfloat s = currentProgram >= 3 ? (0.8 + (t_anim / 10)) : 0.8;
+	GLfloat s = currentProgram == 3 ? (0.8 + (t_anim / 10)) : 0.8;
 
 	mat4 r = rotate ? Mult(Rz(t / 5000), Ry(t / -5000)) : IdentityMatrix();
 	mat4 MTW = Mult(modelToWorld, S(s, s, s));
@@ -148,7 +157,7 @@ void display(void)
 	glUniform1f(glGetUniformLocation(program[currentProgram], "specularExponent"), specularExponent[0]);
 
 	//draw the model
-	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", NULL);
+	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", "in_TexCoord");
 	printError("display");
 
 	strcpy(currentName, programName[currentProgram]);
@@ -240,7 +249,7 @@ int main(int argc, char *argv[])
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 	glutInitContextVersion(3, 2);
-	glutInitWindowSize(500, 500);
+	glutInitWindowSize(700, 700);
 	glutCreateWindow("Project");
 	glutDisplayFunc(display);
 	glutRepeatingTimer(20);
@@ -250,7 +259,7 @@ int main(int argc, char *argv[])
 	glutKeyboardFunc(Key);
 
 	sfMakeRasterFont(); // init font
-	sfSetRasterSize(500, 500);
+	sfSetRasterSize(700, 700);
 
 	init();
 	glutMainLoop();
