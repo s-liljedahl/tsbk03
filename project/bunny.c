@@ -81,7 +81,7 @@ void init(void)
 
 	projectionMatrix = perspective(100, 1.0, 0.1, 1000);
 	worldToView = lookAt(0, 0, 1.5, 0, 0, 0, 0, 1, 0);
-	modelToWorld = IdentityMatrix();
+	modelToWorld = T(0, 0, -4);
 
 	currentProgram = 0;
 
@@ -95,6 +95,7 @@ void init(void)
 	program[6] = loadShadersG("shaders/minimal2.vert", "shaders/minimal2.frag", "shaders/grass.gs");
 
 	glUseProgram(program[currentProgram]);
+
 	printError("init shader");
 
 	// Upload geometry to the GPU:
@@ -139,17 +140,17 @@ void display(void)
 
 	float t = glutGet(GLUT_ELAPSED_TIME);
 
-	// // Enable Z-buffering
-	// glEnable(GL_DEPTH_TEST);
-	// // Enable backface culling
-	// glEnable(GL_CULL_FACE);
-	// glCullFace(GL_BACK);
+	// Enable Z-buffering
+	glEnable(GL_DEPTH_TEST);
+	// Enable backface culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	GLfloat t_anim = fabs(cos(t / 1000));
-	GLfloat s = 0.5;
+	GLfloat s = 2;
 
 	mat4 r = rotate ? Mult(Rz(t / 5000), Ry(t / -5000)) : IdentityMatrix();
 	mat4 MTW = Mult(modelToWorld, S(s, s, s));
@@ -172,7 +173,6 @@ void display(void)
 
 // Trackball
 int prevx = 0, prevy = 0;
-
 void mouseDragged(int x, int y)
 {
 	vec3 p;
@@ -184,7 +184,9 @@ void mouseDragged(int x, int y)
 	p.z = 0;
 	// Create a rotation around this axis and premultiply it on the model-to-world matrix
 	// Limited to fixed camera! Will be wrong if the camera is moved!
-	m = ArbRotate(p, sqrt(p.x * p.x + p.y * p.y) / 50.0); // Rotation in view coordinates
+	mat4 t = T(0, 0, 4);													 // move to origin
+	mat4 t2 = T(0, 0, -4);													 // move to origin
+	m = Mult(t2, Mult(ArbRotate(p, sqrt(p.x * p.x + p.y * p.y) / 50.0), t)); // Rotation in view coordinates
 	modelToWorld = Mult(m, modelToWorld);
 	prevx = x;
 	prevy = y;
