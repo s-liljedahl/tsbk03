@@ -75,8 +75,8 @@ void init(void)
 	// GL inits
 	glClearColor(0.7, 0.6, 0.0, 0);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_BACK);
 	printError("GL inits"); // This is merely a vague indication of where something might be wrong
 
 	projectionMatrix = perspective(100, 1.0, 0.1, 1000);
@@ -92,7 +92,7 @@ void init(void)
 	program[3] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/balloon.gs");
 	program[4] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/expand.gs");
 	program[5] = loadShadersG("shaders/texture.vert", "shaders/texture.frag", "shaders/passthrough_tex.gs");
-	program[6] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/grass.gs");
+	program[6] = loadShadersG("shaders/minimal2.vert", "shaders/minimal2.frag", "shaders/grass.gs");
 
 	glUseProgram(program[currentProgram]);
 	printError("init shader");
@@ -102,7 +102,7 @@ void init(void)
 	teddy = LoadModelPlus("objects/teddy.obj");
 	teapot = LoadModelPlus("objects/teapot.obj");
 	cube = LoadModelPlus("objects/cubeplus.obj");
-	sphere = LoadModelPlus("objects/groundsphere.obj");
+	sphere = LoadModelPlus("objects/model.obj");
 	currentModel = bunny;
 	printError("load models");
 
@@ -117,14 +117,17 @@ void init(void)
 	for (int i = 0; i < kNumPrograms; i++)
 	{
 		glUseProgram(program[i]);
+		printError("init use program");
 
 		glUniformMatrix4fv(glGetUniformLocation(program[i], "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
 		glUniform1iv(glGetUniformLocation(program[i], "index"), 4, &i);
+		printError("init uniforms");
 
 		// load textures
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUniform1i(glGetUniformLocation(program[i], "tex"), 0); // Texture unit 0
 		LoadTGATextureSimple("objects/scale.tga", &texture);
+		printError("init texture");
 	}
 	printError("init programs");
 }
@@ -146,7 +149,7 @@ void display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	GLfloat t_anim = fabs(cos(t / 1000));
-	GLfloat s = currentProgram == 3 ? (0.8 + (t_anim / 10)) : 0.8;
+	GLfloat s = 0.5;
 
 	mat4 r = rotate ? Mult(Rz(t / 5000), Ry(t / -5000)) : IdentityMatrix();
 	mat4 MTW = Mult(modelToWorld, S(s, s, s));
@@ -202,12 +205,12 @@ void Key(unsigned char key)
 	switch (key)
 	{
 	case '+':
-		printf("%d %s \n", currentProgram, currentName);
 		currentProgram = currentProgram == kNumPrograms - 1 ? 0 : currentProgram + 1;
+		printf("%d %s \n", currentProgram, currentName);
 		break;
 	case '-':
-		printf("%d %s \n", currentProgram, currentName);
 		currentProgram = currentProgram == 0 ? kNumPrograms - 1 : currentProgram - 1;
+		printf("%d %s \n", currentProgram, currentName);
 		break;
 	case '1':
 		printf("Bunny \n");
