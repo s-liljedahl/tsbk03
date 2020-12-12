@@ -40,7 +40,7 @@ Model *currentModel;
 #define stringMaxSize 32
 GLuint program[kNumPrograms];
 int currentProgram;
-char programName[kNumPrograms][stringMaxSize] = {"phong + passthrough", "passthrough", "flat", "balloon", "expand", "texture", "grass"};
+char programName[kNumPrograms][stringMaxSize] = {"phong + passthrough", "passthrough", "flat", "balloon", "expand", "texture", "normal"};
 char currentName[stringMaxSize];
 // * Texture(s)
 GLuint texture;
@@ -74,7 +74,7 @@ void init(void)
 
 	// GL inits
 	glClearColor(0.7, 0.6, 0.0, 0);
-	glEnable(GL_DEPTH_TEST);
+	// glEnable(GL_DEPTH_TEST);
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
 	printError("GL inits"); // This is merely a vague indication of where something might be wrong
@@ -92,7 +92,7 @@ void init(void)
 	program[3] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/balloon.gs");
 	program[4] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/expand.gs");
 	program[5] = loadShadersG("shaders/texture.vert", "shaders/texture.frag", "shaders/passthrough_tex.gs");
-	program[6] = loadShadersG("shaders/minimal2.vert", "shaders/minimal2.frag", "shaders/grass.gs");
+	program[6] = loadShadersG("shaders/normal.vert", "shaders/normal.frag", "shaders/normal.gs");
 
 	glUseProgram(program[currentProgram]);
 
@@ -121,6 +121,7 @@ void init(void)
 		printError("init use program");
 
 		glUniformMatrix4fv(glGetUniformLocation(program[i], "projectionMatrix"), 1, GL_TRUE, projectionMatrix.m);
+		glUniformMatrix4fv(glGetUniformLocation(program[i], "viewMatrix"), 1, GL_TRUE, worldToView.m);
 		glUniform1iv(glGetUniformLocation(program[i], "index"), 4, &i);
 		printError("init uniforms");
 
@@ -143,8 +144,8 @@ void display(void)
 	// Enable Z-buffering
 	glEnable(GL_DEPTH_TEST);
 	// Enable backface culling
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	// glEnable(GL_CULL_FACE);
+	// glCullFace(GL_BACK);
 
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -163,6 +164,17 @@ void display(void)
 	//draw the model
 	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", "in_TexCoord");
 	printError("display");
+
+	if (currentProgram == 6)
+	{
+		int baseprogram = 1;
+		glUseProgram(program[baseprogram]);
+		glUniform1f(glGetUniformLocation(program[baseprogram], "t"), t_anim);
+		glUniformMatrix4fv(glGetUniformLocation(program[baseprogram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
+		glUniform1f(glGetUniformLocation(program[baseprogram], "specularExponent"), specularExponent[baseprogram]);
+		DrawModel(currentModel, program[baseprogram], "inPosition", "inNormal", "in_TexCoord");
+		printError("display second");
+	}
 
 	strcpy(currentName, programName[currentProgram]);
 	sfDrawString(20, 20, currentName);

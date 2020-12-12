@@ -5,6 +5,7 @@ layout (location = 1) in vec3 inNormal;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelToWorldToView;
+uniform mat4 viewMatrix;
 
 out VS_OUT {
     vec3 normal;
@@ -13,8 +14,8 @@ out VS_OUT {
 
 void main(void)
 {
-	// Rotate normal (simple normal matrix, uniform scaling only)
-	gl_Position=projectionMatrix * modelToWorldToView * vec4(inPosition, 1.0);
-    mat3 normalMatrix = mat3(transpose(inverse(projectionMatrix * modelToWorldToView)));
+    // Rotate normal (simple normal matrix, uniform scaling only)
+    gl_Position = modelToWorldToView * vec4(inPosition, 1.0); 
+    mat3 normalMatrix = mat3(transpose(inverse(modelToWorldToView)));
     vs_out.normal = normalize(vec3(vec4(normalMatrix * inNormal, 0.0)));
 }
