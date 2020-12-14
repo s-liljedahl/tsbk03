@@ -36,16 +36,27 @@ Model *bunny, *sphere, *teddy, *teapot, *cube;
 Model *currentModel;
 
 // * Reference(s) to shader program(s)
-#define kNumPrograms 7
+#define kNumPrograms 9
 #define stringMaxSize 32
 GLuint program[kNumPrograms];
 int currentProgram;
-char programName[kNumPrograms][stringMaxSize] = {"phong + passthrough", "passthrough", "flat", "balloon", "expand", "texture", "normal"};
+char programName[kNumPrograms][stringMaxSize] =
+	{
+		"phong + passthrough",
+		"passthrough", "flat",
+		"balloon",
+		"expand",
+		"texture",
+		"normal",
+		"fur",
+		"duplicate" // mirror
+};
 char currentName[stringMaxSize];
 // * Texture(s)
 GLuint texture;
 
 bool rotate = false;
+vec3 gravity;
 
 // light sources
 vec3 lightSourcesColorsArr[] = {
@@ -82,6 +93,7 @@ void init(void)
 	projectionMatrix = perspective(100, 1.0, 0.1, 1000);
 	worldToView = lookAt(0, 0, 1.5, 0, 0, 0, 0, 1, 0);
 	modelToWorld = T(0, 0, -4);
+	gravity = SetVector(0.0, -1.0, 0.0);
 
 	currentProgram = 0;
 
@@ -93,6 +105,8 @@ void init(void)
 	program[4] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/expand.gs");
 	program[5] = loadShadersG("shaders/texture.vert", "shaders/texture.frag", "shaders/passthrough_tex.gs");
 	program[6] = loadShadersG("shaders/normal.vert", "shaders/normal.frag", "shaders/normal.gs");
+	program[7] = loadShadersG("shaders/normal.vert", "shaders/normal.frag", "shaders/fur.gs");
+	program[8] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/duplicate.gs");
 
 	glUseProgram(program[currentProgram]);
 
@@ -160,12 +174,13 @@ void display(void)
 	glUniform1f(glGetUniformLocation(program[currentProgram], "t"), t_anim);
 	glUniformMatrix4fv(glGetUniformLocation(program[currentProgram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
 	glUniform1f(glGetUniformLocation(program[currentProgram], "specularExponent"), specularExponent[0]);
+	glUniform3fv(glGetUniformLocation(program[currentProgram], "gravity"), 1, &gravity);
 
 	//draw the model
 	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", "in_TexCoord");
 	printError("display");
 
-	if (currentProgram == 6)
+	if (currentProgram >= 6)
 	{
 		int baseprogram = 1;
 		glUseProgram(program[baseprogram]);
