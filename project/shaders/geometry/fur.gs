@@ -1,7 +1,7 @@
 
 #version 330 core
 layout (triangles) in;
-layout (triangle_strip, max_vertices = 3) out;
+layout (triangle_strip, max_vertices = 18) out;
 
 in VS_OUT {
     vec3 normal;
@@ -17,7 +17,7 @@ out vec3 exNormalG; // Phong
 
 const float magnitude = 0.2;
 
-void GenerateLine(int index, float pOffset, float nOffset)
+void CreateVert(int index, float pOffset)
 {
     vec4 normal = vec4(gs_in[index].normal, 0.0) + vec4(gravity, 0.0);
     vec4 pos = gl_in[index].gl_Position;
@@ -26,33 +26,30 @@ void GenerateLine(int index, float pOffset, float nOffset)
     exNormalG = gs_in[index].normal;
     // base
     gl_Position = projectionMatrix * left;
-    color = vec4(1.0, 0.0, 0.2, 1.0);
+    color = vec4(0.1, 0.3, 0.1, 1.0);
     EmitVertex();
     // base
     gl_Position = projectionMatrix * right;
-    color = vec4(1.0, 0.2, 0.2, 1.0);
+    color = vec4(0.1, 0.3, 0.1, 1.0);
     EmitVertex();
     // top
     gl_Position = projectionMatrix * (pos + normal * magnitude);
-    color = vec4(1.0, 1.0, 1.0, 0.0);
+    color = vec4(0.2, 0.7, 0.2, 0.5);
     EmitVertex();
     EndPrimitive();
 }
 
 void main()
 {
-  const float offset = 0.01;
-  GenerateLine(0, offset, -1.0);
-  GenerateLine(1, offset, -0.5);
-  GenerateLine(2, offset, -0.8);
+  const float offset = 0.05;
 
-  // GenerateLine(1, offset, -1.0);
-  // GenerateLine(1, offset, -0.5);
-  // GenerateLine(1, offset, -0.8);
+  CreateVert(0, offset);
+  CreateVert(1, offset);
+  CreateVert(2, offset);
 
-  // GenerateLine(2, offset, -1.0);
-  // GenerateLine(2, offset, -0.5);
-  // GenerateLine(2, offset, -0.8);
+  CreateVert(0, -offset);
+  CreateVert(1, -offset);
+  CreateVert(2, -offset);
 }
 
 

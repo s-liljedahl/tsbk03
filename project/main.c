@@ -59,7 +59,7 @@ char currentName[stringMaxSize];
 GLuint texture;
 
 bool rotate = false;
-vec3 gravity;
+vec3 gravity, color;
 
 // light sources
 vec3 lightSourcesColorsArr[] = {
@@ -95,13 +95,14 @@ void init(void)
 	projectionMatrix = perspective(100, 1.0, 0.1, 1000);
 	worldToView = lookAt(0, 0, 1.5, 0, 0, 0, 0, 1, 0);
 	modelToWorld = T(0, 0, -4);
-	gravity = SetVector(0.0, -1.0, 0.0);
+	gravity = SetVector(0.0, -1.0, 1.0);
+	color = SetVector(0.2, 0.9, 0.2);
 
 	currentProgram = 10;
 
 	// Load and compile shader
 	program[0] = loadShadersG("shaders/vertex/bunny.vert", "shaders/fragment/bunny.frag", "shaders/geometry/passthrough.gs");
-	program[1] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/passthrough.gs");
+	program[1] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/uniformColor.frag", "shaders/geometry/passthrough.gs");
 	program[2] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/flatshading.gs");
 	program[3] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/balloon.gs");
 	program[4] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/expand.gs");
@@ -178,6 +179,7 @@ void display(void)
 	glUniform1f(glGetUniformLocation(program[currentProgram], "t"), t_anim);
 	glUniformMatrix4fv(glGetUniformLocation(program[currentProgram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
 	glUniform3fv(glGetUniformLocation(program[currentProgram], "gravity"), 1, &gravity);
+	glUniform3fv(glGetUniformLocation(program[currentProgram], "color"), 1, &color);
 	printError("uniforms");
 
 	//draw the model
@@ -209,13 +211,9 @@ void mouseDragged(int x, int y)
 {
 	vec3 p;
 	mat4 m;
-	// This is a simple and IMHO really nice trackball system:
-	// Use the movement direction to create an orthogonal rotation axis
 	p.y = x - prevx;
 	p.x = -(prevy - y);
 	p.z = 0;
-	// Create a rotation around this axis and premultiply it on the model-to-world matrix
-	// Limited to fixed camera! Will be wrong if the camera is moved!
 	mat4 t = T(0, 0, 4);													 // move to origin
 	mat4 t2 = T(0, 0, -4);													 // move to origin
 	m = Mult(t2, Mult(ArbRotate(p, sqrt(p.x * p.x + p.y * p.y) / 50.0), t)); // Rotation in view coordinates
