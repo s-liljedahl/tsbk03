@@ -61,11 +61,11 @@ vec3 gravity;
 // light sources
 vec3 lightSourcesColorsArr[] = {
 	{1.0f, 0.0f, 0.0f}, // Red light
-	{0.0f, 0.7f, 0.5f}, // Green light
+	{1.0f, 1.0f, 0.8f}, // Green light
 	{0.0f, 0.0f, 1.0f}, // Blue light
 	{1.0f, 1.0f, 1.0f}	// White light
 };
-GLint isDirectional[] = {1, 1, 1, 1};
+GLint isDirectional[] = {1, 1, 0, 0};
 
 vec3 lightSourcesDirectionsPositions[] = {
 	{10.0f, 5.0f, 0.0f}, // Red light, positional
@@ -73,8 +73,6 @@ vec3 lightSourcesDirectionsPositions[] = {
 	{-1.0f, 0.0f, 0.0f}, // Blue light along X
 	{0.0f, 0.0f, -1.0f}, // White light along Z
 };
-// and the specular exponent (per object):
-GLfloat specularExponent[] = {200.0, 200.0, 60.0, 50.0, 300.0, 150.0};
 
 void init(void)
 {
@@ -84,7 +82,7 @@ void init(void)
 	dumpInfo();
 
 	// GL inits
-	glClearColor(0.7, 0.6, 0.0, 0);
+	glClearColor(0.1, 0.1, 0.1, 0);
 	// glEnable(GL_DEPTH_TEST);
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
@@ -173,24 +171,24 @@ void display(void)
 
 	glUniform1f(glGetUniformLocation(program[currentProgram], "t"), t_anim);
 	glUniformMatrix4fv(glGetUniformLocation(program[currentProgram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
-	glUniform1f(glGetUniformLocation(program[currentProgram], "specularExponent"), specularExponent[0]);
 	glUniform3fv(glGetUniformLocation(program[currentProgram], "gravity"), 1, &gravity);
 
 	//draw the model
 	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", "in_TexCoord");
 	printError("display");
 
+	// display with normal shader
 	if (currentProgram >= 6)
 	{
 		int baseprogram = 1;
 		glUseProgram(program[baseprogram]);
 		glUniform1f(glGetUniformLocation(program[baseprogram], "t"), t_anim);
 		glUniformMatrix4fv(glGetUniformLocation(program[baseprogram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
-		glUniform1f(glGetUniformLocation(program[baseprogram], "specularExponent"), specularExponent[baseprogram]);
 		DrawModel(currentModel, program[baseprogram], "inPosition", "inNormal", "in_TexCoord");
 		printError("display second");
 	}
 
+	// name of the program
 	strcpy(currentName, programName[currentProgram]);
 	sfDrawString(20, 20, currentName);
 	printError("display text ");
