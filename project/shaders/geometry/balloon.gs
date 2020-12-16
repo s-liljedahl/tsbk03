@@ -9,9 +9,7 @@ layout(triangle_strip, max_vertices = 3) out;
 in vec3 exNormal[3];
 out vec3 exNormalG;
 
-// in vec4 gl_Position[3]
-// out vec4 gl_Position 
-const float magnitude = 0.1;
+const float magnitude = 0.3;
 
 vec3 GetNormal()
 {

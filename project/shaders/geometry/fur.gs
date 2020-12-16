@@ -1,7 +1,7 @@
 
 #version 330 core
 layout (triangles) in;
-layout (line_strip, max_vertices = 6) out;
+layout (triangle_strip, max_vertices = 3) out;
 
 in VS_OUT {
     vec3 normal;
@@ -12,45 +12,47 @@ uniform mat4 projectionMatrix;
 uniform vec3 gravity;
 
 out vec3 frag_Position;
-const float magnitude = 0.5;
+out vec4 color;
+out vec3 exNormalG; // Phong
 
-void GenerateLine(int index)
-{
-    // base
-    gl_Position = projectionMatrix * gl_in[index].gl_Position;
-    EmitVertex();
-    // top
-    gl_Position = projectionMatrix * (gl_in[index].gl_Position + vec4(gs_in[index].normal, 0.0) * magnitude);
-    EmitVertex();
-    EndPrimitive();
-}
+const float magnitude = 0.2;
 
-void GenerateLine2(int index, float pOffset, float nOffset)
+void GenerateLine(int index, float pOffset, float nOffset)
 {
-    vec4 pos = gl_in[index].gl_Position + vec4(0.0, pOffset, 0.0, 0.0);
     vec4 normal = vec4(gs_in[index].normal, 0.0) + vec4(gravity, 0.0);
+    vec4 pos = gl_in[index].gl_Position;
+    vec4 right = gl_in[index].gl_Position + vec4(pOffset, 0.0, 0.0, 0.0);
+    vec4 left = gl_in[index].gl_Position + vec4(-pOffset, 0.0, 0.0, 0.0);
+    exNormalG = gs_in[index].normal;
     // base
-    gl_Position = projectionMatrix * pos;
+    gl_Position = projectionMatrix * left;
+    color = vec4(1.0, 0.0, 0.2, 1.0);
+    EmitVertex();
+    // base
+    gl_Position = projectionMatrix * right;
+    color = vec4(1.0, 0.2, 0.2, 1.0);
     EmitVertex();
     // top
     gl_Position = projectionMatrix * (pos + normal * magnitude);
+    color = vec4(1.0, 1.0, 1.0, 0.0);
     EmitVertex();
     EndPrimitive();
 }
 
 void main()
 {
-  GenerateLine2(0, 0, -1.0);
-  GenerateLine2(0, 0, -0.5);
-  GenerateLine2(0, 0, -0.8);
-  
-  GenerateLine2(1, 0, -1.0);
-  GenerateLine2(1, 0, -0.5);
-  GenerateLine2(1, 0, -0.8);
+  const float offset = 0.01;
+  GenerateLine(0, offset, -1.0);
+  GenerateLine(1, offset, -0.5);
+  GenerateLine(2, offset, -0.8);
 
-  GenerateLine2(2, 0, -1.0);
-  GenerateLine2(2, 0, -0.5);
-  GenerateLine2(2, 0, -0.8);
+  // GenerateLine(1, offset, -1.0);
+  // GenerateLine(1, offset, -0.5);
+  // GenerateLine(1, offset, -0.8);
+
+  // GenerateLine(2, offset, -1.0);
+  // GenerateLine(2, offset, -0.5);
+  // GenerateLine(2, offset, -0.8);
 }
 
 

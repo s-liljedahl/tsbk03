@@ -14,6 +14,6 @@ void main(void)
 {
 	// Rotate normal (simple normal matrix, uniform scaling only)
 	exNormal = mat3(modelToWorldToView) * inNormal; 
-	gl_Position=projectionMatrix * modelToWorldToView * vec4(inPosition, 1.0);
+	gl_Position = projectionMatrix * modelToWorldToView * vec4(inPosition, 1.0);
 	exSurface = vec3(1.0);
 }

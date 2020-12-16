@@ -36,20 +36,23 @@ Model *bunny, *sphere, *teddy, *teapot, *cube;
 Model *currentModel;
 
 // * Reference(s) to shader program(s)
-#define kNumPrograms 9
+#define kNumPrograms 11
 #define stringMaxSize 32
 GLuint program[kNumPrograms];
 int currentProgram;
 char programName[kNumPrograms][stringMaxSize] =
 	{
-		"phong + passthrough",
-		"passthrough", "flat",
+		"phong",
+		"passthrough",
+		"flat",
 		"balloon",
 		"expand",
 		"texture",
 		"normal",
 		"fur",
-		"duplicate" // mirror
+		"duplicate",
+		"voxel",
+		"voxel", // end
 };
 char currentName[stringMaxSize];
 // * Texture(s)
@@ -83,6 +86,7 @@ void init(void)
 
 	// GL inits
 	glClearColor(0.1, 0.1, 0.1, 0);
+	glEnable(GL_BLEND);
 	// glEnable(GL_DEPTH_TEST);
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_BACK);
@@ -93,7 +97,7 @@ void init(void)
 	modelToWorld = T(0, 0, -4);
 	gravity = SetVector(0.0, -1.0, 0.0);
 
-	currentProgram = 0;
+	currentProgram = 10;
 
 	// Load and compile shader
 	program[0] = loadShadersG("shaders/vertex/bunny.vert", "shaders/fragment/bunny.frag", "shaders/geometry/passthrough.gs");
@@ -103,8 +107,10 @@ void init(void)
 	program[4] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/expand.gs");
 	program[5] = loadShadersG("shaders/vertex/texture.vert", "shaders/fragment/texture.frag", "shaders/geometry/passthrough_tex.gs");
 	program[6] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/normal.frag", "shaders/geometry/normal.gs");
-	program[7] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/normal.frag", "shaders/geometry/fur.gs");
-	program[8] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/duplicate.gs");
+	program[7] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/colorIn.frag", "shaders/geometry/fur.gs");
+	program[8] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/shadow.frag", "shaders/geometry/duplicate.gs");
+	program[9] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/voxel.frag", "shaders/geometry/voxel.gs");
+	program[10] = loadShadersG("shaders/vertex/voxel2.vert", "shaders/fragment/voxel2.frag", "shaders/geometry/voxel2.gs");
 
 	glUseProgram(program[currentProgram]);
 
@@ -172,13 +178,14 @@ void display(void)
 	glUniform1f(glGetUniformLocation(program[currentProgram], "t"), t_anim);
 	glUniformMatrix4fv(glGetUniformLocation(program[currentProgram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
 	glUniform3fv(glGetUniformLocation(program[currentProgram], "gravity"), 1, &gravity);
+	printError("uniforms");
 
 	//draw the model
 	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", "in_TexCoord");
 	printError("display");
 
 	// display with normal shader
-	if (currentProgram >= 6)
+	if (currentProgram >= 6 && currentProgram < 9)
 	{
 		int baseprogram = 1;
 		glUseProgram(program[baseprogram]);

@@ -11,6 +11,7 @@ out vec3 exNormalG;
 
 // in vec4 gl_Position[3]
 // out vec4 gl_Position 
+const float magnitude = 5.0;
 
 vec3 GetNormal()
 {
@@ -21,7 +22,6 @@ vec3 GetNormal()
 
 vec4 explode(vec4 position, vec3 normal)
 {
-    float magnitude = 1.0;
     vec3 direction = normal * t * magnitude; 
     return position + vec4(direction, 0.0);
 } 
