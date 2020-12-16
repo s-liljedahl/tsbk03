@@ -98,15 +98,15 @@ void init(void)
 	currentProgram = 0;
 
 	// Load and compile shader
-	program[0] = loadShadersG("shaders/bunny.vert", "shaders/bunny.frag", "shaders/passthrough.gs");
-	program[1] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/passthrough.gs");
-	program[2] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/flatshading.gs");
-	program[3] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/balloon.gs");
-	program[4] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/expand.gs");
-	program[5] = loadShadersG("shaders/texture.vert", "shaders/texture.frag", "shaders/passthrough_tex.gs");
-	program[6] = loadShadersG("shaders/normal.vert", "shaders/normal.frag", "shaders/normal.gs");
-	program[7] = loadShadersG("shaders/normal.vert", "shaders/normal.frag", "shaders/fur.gs");
-	program[8] = loadShadersG("shaders/minimal.vert", "shaders/minimal.frag", "shaders/duplicate.gs");
+	program[0] = loadShadersG("shaders/vertex/bunny.vert", "shaders/fragment/bunny.frag", "shaders/geometry/passthrough.gs");
+	program[1] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/passthrough.gs");
+	program[2] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/flatshading.gs");
+	program[3] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/balloon.gs");
+	program[4] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/expand.gs");
+	program[5] = loadShadersG("shaders/vertex/texture.vert", "shaders/fragment/texture.frag", "shaders/geometry/passthrough_tex.gs");
+	program[6] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/normal.frag", "shaders/geometry/normal.gs");
+	program[7] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/normal.frag", "shaders/geometry/fur.gs");
+	program[8] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/duplicate.gs");
 
 	glUseProgram(program[currentProgram]);
 
@@ -142,7 +142,7 @@ void init(void)
 		// load textures
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUniform1i(glGetUniformLocation(program[i], "tex"), 0); // Texture unit 0
-		LoadTGATextureSimple("objects/scale.tga", &texture);
+		LoadTGATextureSimple("textures/scale.tga", &texture);
 		printError("init texture");
 	}
 	printError("init programs");
