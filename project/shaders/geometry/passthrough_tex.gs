@@ -25,8 +25,8 @@ void main()
     texCoordG = texCoord[i];
     vec4 texColor = texture(tex, texCoordG);
 
-    if (texColor.r <= 0.1) {
-      gl_Position = gl_in[i].gl_Position - (vec4(exNormalG, 1.0) * 0.07);
+    if (texColor.g <= 0.6) {
+      gl_Position = gl_in[i].gl_Position + (vec4(exNormalG, 1.0) * 0.07);
     } else {
       gl_Position = gl_in[i].gl_Position;
     }

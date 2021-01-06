@@ -8,6 +8,7 @@ out vec3 exSurface;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelToWorldToView;
+uniform mat4 viewMatrix;
 
 
 void main(void)

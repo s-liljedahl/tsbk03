@@ -8,6 +8,7 @@ layout(triangle_strip, max_vertices = 3) out;
 
 in vec3 exNormal[3];
 out vec3 exNormalG;
+out vec4 color;
 
 // in vec4 gl_Position[3]
 // out vec4 gl_Position 
@@ -40,6 +41,7 @@ void main()
   {
     // gl_Position = explode(gl_in[i].gl_Position + (middle * t * 2), GetNormal());
     gl_Position = explode(gl_in[i].gl_Position, GetNormal());
+    color = vec4(1-t, 1-t, 1-t, 1-t);
     exNormalG = exNormal[i];
     EmitVertex();
   }

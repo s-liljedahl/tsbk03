@@ -14,7 +14,7 @@ void main(void)
 {
 	// float shade = dot(normalize(vec4(exNormalG, 1.0)), texture);
 	// outColor = vec4(shade, shade, shade, 1.0);
-	outColor = texture(tex, texCoordG);
+	outColor = vec4(0.5, 0.5, 0.0, 1.0) * texture(tex, texCoordG);
 	// outColor = texture(tex, texCoord);
 
 }
