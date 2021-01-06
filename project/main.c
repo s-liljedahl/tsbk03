@@ -36,7 +36,7 @@ Model *bunny, *sphere, *teddy, *teapot, *cube;
 Model *currentModel;
 
 // * Reference(s) to shader program(s)
-#define kNumPrograms 11
+#define kNumPrograms 12
 #define stringMaxSize 32
 GLuint program[kNumPrograms];
 int currentProgram;
@@ -45,13 +45,14 @@ char programName[kNumPrograms][stringMaxSize] =
 		"phong",
 		"passthrough",
 		"flat",
+		"wireframe",
 		"balloon",
-		"expand",
-		"texture",
-		"normal",
-		"fur",
-		"duplicate",
-		"voxel",
+		"explode",
+		"use texture",
+		"normal viz",
+		"grass",
+		"shadow",
+		"voxel try",
 		"voxel", // end
 };
 char currentName[stringMaxSize];
@@ -98,20 +99,21 @@ void init(void)
 	gravity = SetVector(0.0, -1.0, 1.0);
 	color = SetVector(0.2, 0.9, 0.2);
 
-	currentProgram = 10;
+	currentProgram = 0;
 
 	// Load and compile shader
 	program[0] = loadShadersG("shaders/vertex/bunny.vert", "shaders/fragment/bunny.frag", "shaders/geometry/passthrough.gs");
 	program[1] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/uniformColor.frag", "shaders/geometry/passthrough.gs");
 	program[2] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/flatshading.gs");
-	program[3] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/balloon.gs");
-	program[4] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/expand.gs");
-	program[5] = loadShadersG("shaders/vertex/texture.vert", "shaders/fragment/texture.frag", "shaders/geometry/passthrough_tex.gs");
-	program[6] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/normal.frag", "shaders/geometry/normal.gs");
-	program[7] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/colorIn.frag", "shaders/geometry/fur.gs");
-	program[8] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/shadow.frag", "shaders/geometry/duplicate.gs");
-	program[9] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/voxel.frag", "shaders/geometry/voxel.gs");
-	program[10] = loadShadersG("shaders/vertex/voxel2.vert", "shaders/fragment/voxel2.frag", "shaders/geometry/voxel2.gs");
+	program[3] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/colorIn.frag", "shaders/geometry/wireframe.gs");
+	program[4] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/minimal.frag", "shaders/geometry/balloon.gs");
+	program[5] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/colorShade.frag", "shaders/geometry/expand.gs");
+	program[6] = loadShadersG("shaders/vertex/texture.vert", "shaders/fragment/texture.frag", "shaders/geometry/passthrough_tex.gs");
+	program[7] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/normal.frag", "shaders/geometry/normal.gs");
+	program[8] = loadShadersG("shaders/vertex/normal.vert", "shaders/fragment/colorIn.frag", "shaders/geometry/fur.gs");
+	program[9] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/shadow.frag", "shaders/geometry/duplicate.gs");
+	program[10] = loadShadersG("shaders/vertex/minimal.vert", "shaders/fragment/voxel.frag", "shaders/geometry/voxel.gs");
+	program[11] = loadShadersG("shaders/vertex/voxel2.vert", "shaders/fragment/voxel2.frag", "shaders/geometry/voxel2.gs");
 
 	glUseProgram(program[currentProgram]);
 
@@ -147,7 +149,7 @@ void init(void)
 		// load textures
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glUniform1i(glGetUniformLocation(program[i], "tex"), 0); // Texture unit 0
-		LoadTGATextureSimple("textures/scale.tga", &texture);
+		LoadTGATextureSimple("textures/dot.tga", &texture);
 		printError("init texture");
 	}
 	printError("init programs");
@@ -158,36 +160,37 @@ void display(void)
 	printError("pre display");
 	glUseProgram(program[currentProgram]);
 
-	float t = glutGet(GLUT_ELAPSED_TIME);
-
 	// Enable Z-buffering
 	glEnable(GL_DEPTH_TEST);
 	// Enable backface culling
-	// glEnable(GL_CULL_FACE);
-	// glCullFace(GL_BACK);
-
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// ---- transforms ----
+	float t = glutGet(GLUT_ELAPSED_TIME);
 	GLfloat t_anim = fabs(cos(t / 1000));
 	GLfloat s = 2;
-
 	mat4 r = rotate ? Mult(Rz(t / 5000), Ry(t / -5000)) : IdentityMatrix();
 	mat4 MTW = Mult(modelToWorld, S(s, s, s));
 	mat4 modelToWorldToView = Mult(Mult(worldToView, MTW), r); // Combine to one matrix
+	// ---- ---------- ----
 
+	// ---- pass uniforms
 	glUniform1f(glGetUniformLocation(program[currentProgram], "t"), t_anim);
 	glUniformMatrix4fv(glGetUniformLocation(program[currentProgram], "modelToWorldToView"), 1, GL_TRUE, modelToWorldToView.m);
 	glUniform3fv(glGetUniformLocation(program[currentProgram], "gravity"), 1, &gravity);
 	glUniform3fv(glGetUniformLocation(program[currentProgram], "color"), 1, &color);
 	printError("uniforms");
+	// ---- ------------
 
 	//draw the model
 	DrawModel(currentModel, program[currentProgram], "inPosition", "inNormal", "in_TexCoord");
 	printError("display");
 
 	// display with normal shader
-	if (currentProgram >= 6 && currentProgram < 9)
+	if (currentProgram >= 7 && currentProgram < 10)
 	{
 		int baseprogram = 1;
 		glUseProgram(program[baseprogram]);
