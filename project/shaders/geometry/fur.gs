@@ -17,7 +17,7 @@ out vec3 exNormalG; // Phong
 
 const float magnitude = 0.2;
 
-void CreateVert(int index, float pOffset)
+void CreateStrand(int index, float pOffset)
 {
     vec4 normal = vec4(gs_in[index].normal, 0.0) + vec4(gravity, 0.0);
     vec4 pos = gl_in[index].gl_Position;
@@ -43,13 +43,13 @@ void main()
 {
   const float offset = 0.05;
 
-  CreateVert(0, offset);
-  CreateVert(1, offset);
-  CreateVert(2, offset);
+  CreateStrand(0, offset);
+  CreateStrand(1, offset);
+  CreateStrand(2, offset);
 
-  CreateVert(0, -offset);
-  CreateVert(1, -offset);
-  CreateVert(2, -offset);
+  CreateStrand(0, -offset);
+  CreateStrand(1, -offset);
+  CreateStrand(2, -offset);
 }
 
 
